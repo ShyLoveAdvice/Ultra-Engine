@@ -1,0 +1,14 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Ultra.LevelEditor
+{
+    public class UTileSetter : MonoBehaviour
+    {
+        public void SetTiles()
+        {
+
+        }
+    }
+}
