@@ -7,9 +7,8 @@ using UnityEngine.EventSystems;
 
 namespace Ultra.LevelEditor
 {
-    public class UltraGUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public class UltraGUI : MonoBehaviour
     {
-        public bool BlockMouseEvent = true;
         protected ULevelEditorGUIManager GUIManager { get; private set; }
         public void InitializeGUI(ULevelEditorGUIManager guiManager)
         {
@@ -20,20 +19,9 @@ namespace Ultra.LevelEditor
         {
 
         }
-        public virtual void OnPointerEnter(PointerEventData eventData)
+        public virtual void UpdateGUI()
         {
-            if(BlockMouseEvent)
-            {
-                GUIManager.UpdateMouseOverUI(true);
-            }
-        }
 
-        public virtual void OnPointerExit(PointerEventData eventData)
-        {
-            if (BlockMouseEvent)
-            {
-                GUIManager.UpdateMouseOverUI(false);
-            }
         }
     }
 }

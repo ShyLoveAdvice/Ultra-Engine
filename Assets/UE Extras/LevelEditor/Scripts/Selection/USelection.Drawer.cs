@@ -22,6 +22,7 @@ namespace Ultra.LevelEditor
     }
     public partial class USelection: SerializedMonoBehaviour
     {
+        [Header("Selection Drawer"), Space(10)]
         public GameObject ActiveSelectionPrefab;
         public GameObject selectedSelectionPrefab;
 
@@ -55,7 +56,7 @@ namespace Ultra.LevelEditor
         {
             ClearDrawnSelections(ref _drawnSelectedLRs);
 
-            ScaleDraggerManager.TurnOffScaleDraggers();
+            TurnOffScaleDraggers();
         }
         private void ClearDrawnSelections(ref List<LineRenderer> drawnLRs)
         {
@@ -76,14 +77,17 @@ namespace Ultra.LevelEditor
         }
         public void DrawActive()
         {
-            DrawSelection(ActiveSelectionPrefab, ref _drawnActiveLR, ActiveLineDict);
+            DrawSelection(ActiveSelectionPrefab, ref _drawnActiveLR, ActiveSelectionLineDict);
         }
-        public void DrawSelected()
+        public void DrawSelected(bool setScaleDraggers = true)
         {
-            DrawSelection(selectedSelectionPrefab, ref _drawnSelectedLRs, SelectedLineDict);
+            DrawSelection(selectedSelectionPrefab, ref _drawnSelectedLRs, SelectedSelectionLineDict);
 
-            ScaleDraggerManager.TurnOnScaleDraggers();
-            UpdateScaleDraggersWorldPositions(DetermineBoundingBox());
+            if(setScaleDraggers)
+            {
+                TurnOnScaleDraggers();
+                SetScaleDraggersWorldPos(DetermineBoundingBox(SelectedSelectionLineDict));
+            }
         }
 
         public void MoveSelectionPreview(Vector3Int movedDis)
@@ -102,7 +106,7 @@ namespace Ultra.LevelEditor
                 }
             }
 
-            UpdateScaleDraggersWorldPositions(DetermineBoundingBox(_previewPoints));
+            SetScaleDraggersWorldPos(DetermineBoundingBox(_previewPoints));
         }
         private void SaveDrawnSelectedPoints()
         {

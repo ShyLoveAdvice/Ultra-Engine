@@ -57,7 +57,7 @@ namespace Ultra.LevelEditor
         }
         protected virtual void ZoomCamera()
         {
-            if(!ULevelEditorGUIManager.Instance.IsMouseOverUI())
+            if(!ULevelEditorGUIManager.Instance.IsMouseOverUI)
             {
                 if (InputManager.CurrentMouseScrollData.y != 0)
                 {

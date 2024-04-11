@@ -15,9 +15,9 @@ namespace Ultra.LevelEditor
         {
             get
             {
-                if(SelectedLineDict != null)
+                if(SelectedSelectionLineDict != null)
                 {
-                    if(SelectedLineDict.Count == 0)
+                    if(SelectedSelectionLineDict.Count == 0)
                     {
                         return true;
                     }
@@ -27,16 +27,12 @@ namespace Ultra.LevelEditor
             }
         }
         public ULevelEditor LevelEditor {  get; private set; }
-        public USelection(ULevelEditor levelEditor)
-        {
-            LevelEditor = levelEditor;
-        }
         public void InitializeSelection(ULevelEditor levelEditor)
         {
             LevelEditor = levelEditor;
 
-            ActiveLineDict = new Dictionary<int, int[][]>();
-            SelectedLineDict = new Dictionary<int, int[][]>();
+            ActiveSelectionLineDict = new Dictionary<int, int[][]>();
+            SelectedSelectionLineDict = new Dictionary<int, int[][]>();
             _selectedTiles = new Vector3Int[0];
             _toBeRemovedIndexes = new int[0];
 
@@ -46,15 +42,17 @@ namespace Ultra.LevelEditor
             _drawnActiveLR = new List<LineRenderer>();
             _drawnSelectedLRs = new List<LineRenderer>();
             _drawnSelectedPointsDict = new Dictionary<LineRenderer, Vector3[]>();
+
+            TurnOffScaleDraggers();
         }
         public void ClearActive()
         {
-            ClearActiveData();
+            ClearActiveSelectionData();
             ClearDrawnActive();
         }
         public void ClearSelection()
         {
-            ClearSelectionData();
+            ClearSelectedSelectionData();
             ClearDrawnSelected();
         }
         public void BuildSelection(Vector3Int[] selectedCellPoses)
@@ -77,7 +75,7 @@ namespace Ultra.LevelEditor
             int yMin = boxStart.y <= boxEnd.y ? boxStart.y : boxEnd.y;
             int yMax = yMin == boxStart.y ? boxEnd.y : boxStart.y;
 
-            BuildBoxSelectionActiveData(xMin, yMin, xMax, yMax);
+            BuildActiveBoxSelectionData(xMin, yMin, xMax, yMax);
         }
         public void BuildBoxSelectionAdditive(Vector2Int boxStart, Vector2Int boxEnd)
         {
@@ -86,23 +84,23 @@ namespace Ultra.LevelEditor
             int yMin = boxStart.y <= boxEnd.y ? boxStart.y : boxEnd.y;
             int yMax = yMin == boxStart.y ? boxEnd.y : boxStart.y;
 
-            BuildBoxSelectionDataAdditive(xMin, yMin, xMax, yMax);
+            BuildAdditiveBoxSelectionData(xMin, yMin, xMax, yMax);
         }
         public bool Contains(Vector2Int cellPos)
         {
-            return IsInSelection(cellPos.x, cellPos.y, SelectedLineDict);
+            return IsInSelection(cellPos.x, cellPos.y, SelectedSelectionLineDict);
         }
         public bool Contains(Vector3Int cellPos)
         {
-            return IsInSelection(cellPos.x, cellPos.y, SelectedLineDict);
+            return IsInSelection(cellPos.x, cellPos.y, SelectedSelectionLineDict);
         }
         public bool Contains(Vector2 cellPos)
         {
-            return IsInSelection((int)cellPos.x, (int)cellPos.y, SelectedLineDict);
+            return IsInSelection((int)cellPos.x, (int)cellPos.y, SelectedSelectionLineDict);
         }
         public bool Contains(Vector3 cellPos)
         {
-            return IsInSelection((int)cellPos.x, (int)cellPos.y, SelectedLineDict);
+            return IsInSelection((int)cellPos.x, (int)cellPos.y, SelectedSelectionLineDict);
         }
         public Vector3Int[] GetSelectedTiles()
         {
@@ -118,11 +116,11 @@ namespace Ultra.LevelEditor
         {
             List<Vector3Int> selectedCells = new List<Vector3Int>();
 
-            foreach (int yi in SelectedLineDict.Keys)
+            foreach (int yi in SelectedSelectionLineDict.Keys)
             {
-                for (int i = 0; i < SelectedLineDict[yi].Length; i++)
+                for (int i = 0; i < SelectedSelectionLineDict[yi].Length; i++)
                 {
-                    _lineXMin = SelectedLineDict[yi][i][LINEXMIN]; _lineXMax = SelectedLineDict[yi][i][LINEXMAX];
+                    _lineXMin = SelectedSelectionLineDict[yi][i][LINEXMIN]; _lineXMax = SelectedSelectionLineDict[yi][i][LINEXMAX];
 
                     for (int xi = _lineXMin; xi <= _lineXMax; xi++)
                     {

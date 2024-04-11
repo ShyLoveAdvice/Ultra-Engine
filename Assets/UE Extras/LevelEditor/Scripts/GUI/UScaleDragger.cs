@@ -6,64 +6,85 @@ using UnityEngine.UI;
 
 namespace Ultra.LevelEditor
 {
-    
+
     public class UScaleDragger : UltraGUI, IDragHandler, IBeginDragHandler, IEndDragHandler
     {
-        private Vector3Int _draggerCellPos;
+        protected USelection Selection { get => ULevelEditor.Instance.Selection; }
         private Vector3 _draggerWorldPos;
+        private Vector3 _currentMouseCenteredCellPos;
         private Vector3Int _positionShift;
-        private UScaleDraggerManager _scaleDraggerManager;
-        public RectTransform RectTransform { get => _rectTransform; }
         private RectTransform _rectTransform;
-        public Camera UICamera;
         protected override void Initialize()
         {
             base.Initialize();
 
-            BlockMouseEvent = false;
             _rectTransform = GetComponent<RectTransform>();
         }
-        public void InitializeScaleDragger(UScaleDraggerManager scaleDraggerManager)
+        public override void UpdateGUI()
         {
-            _scaleDraggerManager = scaleDraggerManager;
-        }
-        public void UpdateScaleDragger(USelection.ScaleDraggersData scaleDraggersData, UScaleDraggerManager.ScaleDraggerDirections dir)
-        {
-            Vector3 worldPos = Vector3.zero;
-            switch(dir)
+            if(gameObject.activeSelf)
             {
-                case UScaleDraggerManager.ScaleDraggerDirections.LeftBottom:
-                    worldPos = scaleDraggersData.leftBottom; break;
-                case UScaleDraggerManager.ScaleDraggerDirections.LeftTop:
-                    worldPos = scaleDraggersData.leftTop; break;
-                case UScaleDraggerManager.ScaleDraggerDirections.RightBottom:
-                    worldPos = scaleDraggersData.rightBottom; break;
-                case UScaleDraggerManager.ScaleDraggerDirections.RightTop:
-                    worldPos = scaleDraggersData.rightTop; break;
+                Vector2 uiPos = (MMECoordinateSystemConverter.WorldPointToUILocalPoint(_draggerWorldPos + _positionShift, GUIManager.UICamera, Selection.DraggersParent));
+                _rectTransform.anchoredPosition = uiPos;
             }
-
+        }
+        public void TurnOnScaleDragger()
+        {
+            gameObject.SetActive(true);
+            _positionShift = Vector3Int.zero;
+        }
+        public void TurnOffScaleDragger()
+        {
+            gameObject.SetActive(false);
+            _positionShift = Vector3Int.zero;
+        }
+        public void SetWorldPos(Vector3 worldPos)
+        {
             _draggerWorldPos = worldPos;
-            _draggerCellPos = worldPos.ToCellPos();
-
-            Vector2 newPos = (MMECoordinateSystemConverter.WorldPointToUILocalPoint(worldPos + _positionShift, _scaleDraggerManager.GUIManager.UICamera, _scaleDraggerManager.RectTransform));
-            _rectTransform.anchoredPosition = newPos;
         }
         public void OnBeginDrag(PointerEventData eventData)
         {
-            Debug.Log("BeginDrag");
+            Selection.BeginDrag(this);
         }
         public void OnDrag(PointerEventData eventData)
         {
-            Vector3 currentMouseCenteredCellPos = ULevelEditorInputManager.Instance.CurrentMouseCenteredCellPos;
-
-            Vector3 vectorToMouse = currentMouseCenteredCellPos - _draggerWorldPos;
-
-            Debug.Log(vectorToMouse);
+            UpdateUIDimentionPosition();
+            Selection.Drag(_positionShift);
         }
-
         public void OnEndDrag(PointerEventData eventData)
         {
             Debug.Log("EndDrag");
+        }
+        private void UpdateUIDimentionPosition()
+        {
+            if (!GUIManager.IsMouseOverUI)
+            {
+                _currentMouseCenteredCellPos = ULevelEditorInputManager.Instance.CurrentMouseCenteredCellPos;
+
+                Vector3 vectorToMouse = _currentMouseCenteredCellPos - _draggerWorldPos;
+                int positionShiftX = 0; int positionShiftY = 0;
+
+                if (vectorToMouse.x > 0)
+                {
+                    positionShiftX = Mathf.FloorToInt(vectorToMouse.x);
+                }
+                else
+                {
+                    positionShiftX = Mathf.CeilToInt(vectorToMouse.x);
+                }
+
+                if (vectorToMouse.y > 0)
+                {
+                    positionShiftY = Mathf.FloorToInt(vectorToMouse.y);
+                }
+                else
+                {
+                    positionShiftY = Mathf.CeilToInt(vectorToMouse.y);
+                }
+
+                _positionShift.x = positionShiftX;
+                _positionShift.y = positionShiftY;
+            }
         }
     }
 }

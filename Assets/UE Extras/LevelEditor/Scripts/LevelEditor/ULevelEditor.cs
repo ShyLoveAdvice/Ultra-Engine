@@ -68,7 +68,7 @@ namespace Ultra.LevelEditor
         [Button]
         public void TestSelectionBoundingBox()
         {
-            Selection.DetermineBoundingBox();
+            Selection.DetermineBoundingBox(Selection.SelectedSelectionLineDict);
         }
         private void Update()
         {
@@ -77,7 +77,7 @@ namespace Ultra.LevelEditor
             CurrentTileBase = GUIManager.CurrentSelectedTileBase();
             CurrentTool = GUIManager.CurrentSelectedTool();
 
-            GUIManager.UpdateScaleDraggerManager();
+            GUIManager.UpdateGUIs();
 
             UpdateTools();
 

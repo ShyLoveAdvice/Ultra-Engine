@@ -400,10 +400,8 @@ namespace Ultra.LevelEditor
 		/// <summary>
 		/// Triggers the bound pointer enter action when touch enters zone
 		/// </summary>
-		public override void OnPointerEnter(PointerEventData data)
+		public virtual void OnPointerEnter(PointerEventData data)
 		{
-			base.OnPointerEnter(data);
-
 			if (!Interactable)
 			{
 				return;
@@ -417,10 +415,8 @@ namespace Ultra.LevelEditor
 		/// <summary>
 		/// Triggers the bound pointer exit action when touch is out of zone
 		/// </summary>
-		public override void OnPointerExit(PointerEventData data)
+		public virtual void OnPointerExit(PointerEventData data)
 		{
-            base.OnPointerExit(data);
-
             if (!Interactable)
 			{
 				return;

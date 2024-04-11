@@ -23,6 +23,8 @@ namespace Ultra.LevelEditor
         private ULevelEditorToolTypes _currentSelectedTool;
         private TileBase _currentSelectedTileBase;
         private bool _isMouseOverUI;
+
+        public bool IsMouseOverUI { get => _isMouseOverUI; }
         public void InitializeGUIManager(ULevelEditor levelEditor)
         {
             _allUltraGUIs = transform.GetComponentsInChildren<UltraGUI>().ToList();
@@ -33,7 +35,6 @@ namespace Ultra.LevelEditor
             }
 
             InitializeSelectButtons();
-            InitializeScaleDraggerManager();
         }
         private void InitializeSelectButtons()
         {
@@ -57,12 +58,8 @@ namespace Ultra.LevelEditor
                 {
                     UpdateSelectButton(_selectButtons[i]);
                     initializedTileSelectButton = true;
-                }
+                }                                                                                                                                     
             }
-        }
-        private void InitializeScaleDraggerManager()
-        {
-            ScaleDraggerManager.InitializeScaleDraggerManager(this);
         }
 
         public TUltraGUI InstantiateGUltraUI<TUltraGUI>(GameObject prefab, Transform parentTransform) where TUltraGUI: UltraGUI
@@ -93,12 +90,14 @@ namespace Ultra.LevelEditor
         {
             return _currentSelectedTileBase;
         }
-        public bool IsMouseOverUI()
-        {
-            return _isMouseOverUI;
-        }
-
         #region Update Methods
+        public void UpdateGUIs()
+        {
+            for (int i = 0; i < _allUltraGUIs.Count; i++)
+            {
+                _allUltraGUIs[i].UpdateGUI();
+            }
+        }
         public void UpdateCurrentSelectedTool(ULevelEditorToolTypes toolType)
         {
             _currentSelectedTool = toolType;
@@ -113,7 +112,6 @@ namespace Ultra.LevelEditor
                 else
                 {
                     ULevelEditor.Instance.ToolUnSelected(toolTypes[i]);
-                    Debug.Log("UnSelect: " + toolType);
                 }
             }
         }
@@ -141,10 +139,6 @@ namespace Ultra.LevelEditor
                     }
                 }
             }
-        }
-        public void UpdateScaleDraggerManager()
-        {
-            ScaleDraggerManager.UpdateScaleDraggerManager();
         }
         #endregion
     }

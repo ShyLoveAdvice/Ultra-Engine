@@ -23,8 +23,6 @@ namespace Ultra.LevelEditor
 
         public void InitializeTileSelectButton(TileBase tileBase)
         {
-            BlockMouseEvent = false;
-
             _tileBase = tileBase;
 
             NameText.text = tileBase.name;

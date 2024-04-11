@@ -154,7 +154,7 @@ namespace Ultra.LevelEditor
                 else
                 {
                     Selection.ClearDrawnActive();
-                    Selection.ClearSelectionData();
+                    Selection.ClearSelectedSelectionData();
                 }
 
                 SaveAndDrawTiles(_movingTilePoses, _originalTileBasesAtTilesPoses);
@@ -179,7 +179,7 @@ namespace Ultra.LevelEditor
                 {
                     if (Input.GetKeyDown(KeyCode.D))
                     {
-                        Selection.ClearSelectionData();
+                        Selection.ClearSelectedSelectionData();
                         Selection.ClearDrawnSelected();
                     }
                 }
