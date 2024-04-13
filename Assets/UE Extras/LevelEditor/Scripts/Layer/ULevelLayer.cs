@@ -57,10 +57,18 @@ namespace Ultra.LevelEditor
             SavePreviewTiles(poses, tileBases);
         }
 
+        /// <summary>
+        /// Erase Tile Preview Does Not Erase TileData Stored In Layer
+        /// </summary>
+        /// <param name="poses"></param>
         public void EraseTilePreview(Vector3Int pos)
         {
             LayerTileMap.SetTile(pos, null);
         }
+        /// <summary>
+        /// Erase Tiles Preview Does Not Erase TileDatas Stored In Layer
+        /// </summary>
+        /// <param name="poses"></param>
         public void EraseTilesPreview(Vector3Int[] poses)
         {
             for (int i = 0; i < poses.Length; i++)
@@ -79,6 +87,7 @@ namespace Ultra.LevelEditor
             }
             RemovePreviewTiles(poses);
         }
+        
         public void EraseTiles(Vector3Int[] poses)
         {
             EraseTilesPreview(poses);
@@ -112,6 +121,14 @@ namespace Ultra.LevelEditor
             }
         }
 
+        public Vector3Int? GetTilePos(Vector3Int cellPos)
+        {
+            if(_tileDataDict.ContainsKey(cellPos))
+            {
+                return cellPos;
+            }
+            return null;
+        }
         public Vector3Int[] GetTilePoses(Vector3Int[] cellPoses)
         {
             List<Vector3Int> tilePoses = new List<Vector3Int>();
@@ -124,6 +141,15 @@ namespace Ultra.LevelEditor
             }
             return tilePoses.ToArray();
         }
+        public TileBase GetTileBase(Vector3Int cellPos)
+        {
+            if(_tileDataDict.ContainsKey(cellPos))
+            {
+                return _tileDataDict[cellPos].TileBase;
+            }
+            return null;
+        }
+
         public TileBase[] GetTileBases(Vector3Int[] cellPoses)
         {
             TileBase[] tileBases = new TileBase[cellPoses.Length];
@@ -244,7 +270,6 @@ namespace Ultra.LevelEditor
                 }
             }
         }
-
 
 
         private void RemoveTiles(Vector3Int[] poses)

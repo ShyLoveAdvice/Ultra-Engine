@@ -41,12 +41,19 @@ namespace MoreMountains.Tools
             RectTransformUtility.ScreenPointToWorldPointInRectangle(rt, screenPoint, uiCamera, out uiPos);
             return uiPos;
         }
+        public static Vector3 ScreenPointToUIPoint(Vector2Int screenPoint, Camera uiCamera, RectTransform rt)
+        {
+            Vector3 uiPos;
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(rt, screenPoint, uiCamera, out uiPos);
+            return uiPos;
+        }
         public static Vector2 ScreenPointToUILocalPoint(Vector2 screenPoint, Camera uiCamera, RectTransform parentRT)
         {
             Vector2 uiLocalPos;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRT, screenPoint, uiCamera, out uiLocalPos);
             return uiLocalPos;
         }
+
         
     }
 }

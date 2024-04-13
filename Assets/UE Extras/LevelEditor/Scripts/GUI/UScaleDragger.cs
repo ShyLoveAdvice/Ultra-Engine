@@ -9,8 +9,12 @@ namespace Ultra.LevelEditor
 
     public class UScaleDragger : UltraGUI, IDragHandler, IBeginDragHandler, IEndDragHandler
     {
+        public Vector3Int CornerWorldPos { get => _cornerInitialWorldPosInt + _positionShift; }
+        public USelection.RectCornerDirections CornerDirection { get => _cornerDirection; }
+        private USelection.RectCornerDirections _cornerDirection;
         protected USelection Selection { get => ULevelEditor.Instance.Selection; }
-        private Vector3 _draggerWorldPos;
+        public Vector3 _cornerInitialWorldPos;
+        private Vector3Int _cornerInitialWorldPosInt;
         private Vector3 _currentMouseCenteredCellPos;
         private Vector3Int _positionShift;
         private RectTransform _rectTransform;
@@ -24,7 +28,7 @@ namespace Ultra.LevelEditor
         {
             if(gameObject.activeSelf)
             {
-                Vector2 uiPos = (MMECoordinateSystemConverter.WorldPointToUILocalPoint(_draggerWorldPos + _positionShift, GUIManager.UICamera, Selection.DraggersParent));
+                Vector2 uiPos = (MMECoordinateSystemConverter.WorldPointToUILocalPoint(_cornerInitialWorldPos + _positionShift, GUIManager.UICamera, Selection.DraggersParent));
                 _rectTransform.anchoredPosition = uiPos;
             }
         }
@@ -38,21 +42,27 @@ namespace Ultra.LevelEditor
             gameObject.SetActive(false);
             _positionShift = Vector3Int.zero;
         }
-        public void SetWorldPos(Vector3 worldPos)
+        public void SetWorldPos(Vector3 worldPos, USelection.RectCornerDirections cornerDir)
         {
-            _draggerWorldPos = worldPos;
+            _positionShift = Vector3Int.zero;
+            _cornerInitialWorldPos = worldPos;
+            _cornerInitialWorldPosInt = worldPos.MMVector3Int();
+            _cornerDirection = cornerDir;
+            gameObject.name = cornerDir.ToString();
         }
         public void OnBeginDrag(PointerEventData eventData)
         {
+            Debug.Log("Begin Dragging: " + gameObject.name);
             Selection.BeginDrag(this);
         }
         public void OnDrag(PointerEventData eventData)
         {
             UpdateUIDimentionPosition();
-            Selection.Drag(_positionShift);
+            Selection.Drag(_positionShift + _cornerInitialWorldPosInt);
         }
         public void OnEndDrag(PointerEventData eventData)
         {
+            Selection.EndDrag();
             Debug.Log("EndDrag");
         }
         private void UpdateUIDimentionPosition()
@@ -61,7 +71,7 @@ namespace Ultra.LevelEditor
             {
                 _currentMouseCenteredCellPos = ULevelEditorInputManager.Instance.CurrentMouseCenteredCellPos;
 
-                Vector3 vectorToMouse = _currentMouseCenteredCellPos - _draggerWorldPos;
+                Vector3 vectorToMouse = _currentMouseCenteredCellPos - _cornerInitialWorldPos;
                 int positionShiftX = 0; int positionShiftY = 0;
 
                 if (vectorToMouse.x > 0)

@@ -86,12 +86,13 @@ namespace Ultra.LevelEditor
             if(setScaleDraggers)
             {
                 TurnOnScaleDraggers();
-                SetScaleDraggersWorldPos(DetermineBoundingBox(SelectedSelectionLineDict));
+                InitializeScaleDraggers(DetermineBoundingBox(SelectedSelectionLineDict));
             }
         }
 
         public void MoveSelectionPreview(Vector3Int movedDis)
         {
+            List<Vector3> allDrawnSelectedPoints = new List<Vector3>();
             foreach (LineRenderer lr in _drawnSelectedLRs)
             {
                 if(_drawnSelectedPointsDict.ContainsKey(lr))
@@ -101,12 +102,14 @@ namespace Ultra.LevelEditor
                     {
                         _previewPoints[i].x = _drawnSelectedPointsDict[lr][i].x + movedDis.x;
                         _previewPoints[i].y = _drawnSelectedPointsDict[lr][i].y + movedDis.y;
+                        allDrawnSelectedPoints.Add(_previewPoints[i]);
                     }
                     lr.SetPositions(_previewPoints);
                 }
             }
 
-            SetScaleDraggersWorldPos(DetermineBoundingBox(_previewPoints));
+            //TurnOffScaleDraggers();
+            InitializeScaleDraggers(DetermineBoundingBox(allDrawnSelectedPoints.ToArray()));
         }
         private void SaveDrawnSelectedPoints()
         {

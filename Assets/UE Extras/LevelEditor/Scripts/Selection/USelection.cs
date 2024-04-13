@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,7 +44,13 @@ namespace Ultra.LevelEditor
             _drawnSelectedLRs = new List<LineRenderer>();
             _drawnSelectedPointsDict = new Dictionary<LineRenderer, Vector3[]>();
 
+            for (int i = 0; i < Enum.GetNames(typeof(RectCornerDirections)).Length; i++)
+            {
+                _cornerScaleDraggerDict.Add((RectCornerDirections)i, ULevelEditorGUIManager.Instance.InstantiateGUltraUI<UScaleDragger>(ScaleDraggerPrefab, DraggersParent.transform));
+            }
+
             TurnOffScaleDraggers();
+            DraggingScaleDraggerPlaceHolder.TurnOffScaleDragger();
         }
         public void ClearActive()
         {
