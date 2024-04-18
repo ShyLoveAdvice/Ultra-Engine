@@ -12,6 +12,11 @@ namespace Ultra.LevelEditor
     {
         public Vector3Int Pos;
         public TileBase TileBase;
+        public UTileData(bool emptyTileData = true)
+        {
+            Pos = new Vector3Int(int.MinValue, int.MinValue);
+            TileBase = null;
+        }
         public UTileData(Vector3Int pos, TileBase tileBase)
         {
             this.Pos = pos;

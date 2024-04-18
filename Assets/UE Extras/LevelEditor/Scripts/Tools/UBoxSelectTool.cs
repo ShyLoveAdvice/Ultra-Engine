@@ -31,31 +31,30 @@ namespace Ultra.LevelEditor
         }
         private Vector3Int _movedDistance;
         private Vector3Int _lastMovedDistance;
-        private Vector3Int[] _originalSelectedTilesPoses;
-        private TileBase[] _originalTileBasesAtTilesPoses;
-        private Vector3Int[] _movingTilePoses;
         public UBoxSelectTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
         {
         }
         public override void InterruptTool()
         {
             base.InterruptTool();
+        }
+        protected override void OnSelected()
+        {
+            base.OnSelected();
 
-            DeterminePreviewTiles(ref _originalSelectedTilesPoses, ref _originalTileBasesAtTilesPoses);
-            if (_originalSelectedTilesPoses.Length == 0)
+            if(Selection != null)
             {
-                DetermineTiles(ref _originalSelectedTilesPoses, ref _originalTileBasesAtTilesPoses);
-                LevelEditor.CurrentLayer.EraseTiles(_originalSelectedTilesPoses);
-                LevelEditor.CurrentLayer.DrawTilesPreview(_originalSelectedTilesPoses, _originalTileBasesAtTilesPoses);
+                Selection.RebuildSelected();
             }
-            SaveAndDrawTiles(_movingTilePoses, _originalTileBasesAtTilesPoses);
-
         }
         protected override void UnSelected()
         {
             base.UnSelected();
 
-            SaveAndDrawTiles(_movingTilePoses, _originalTileBasesAtTilesPoses);
+            if(Selection != null)
+            {
+                Selection.ClearAndSetSelectedTiles();
+            }
         }
         protected override void BeforeMouseEvents()
         {
@@ -76,31 +75,13 @@ namespace Ultra.LevelEditor
                 if (Selection.NothingSelected || !Selection.Contains(CurrentMouseCellPos))
                 {
                     BoxSelectState = SelectStates.New;
+                    Debug.Log("NothingSelected: " + Selection.NothingSelected);
                 }
                 else if (CanMove)
                 {
                     BoxSelectState = SelectStates.Move;
                     _movedDistance = Vector3Int.zero;
                     _lastMovedDistance = Vector3Int.zero;
-
-                    DeterminePreviewTiles(ref _originalSelectedTilesPoses, ref _originalTileBasesAtTilesPoses);
-                    if (_originalSelectedTilesPoses.Length == 0)
-                    {
-                        DetermineTiles(ref _originalSelectedTilesPoses, ref _originalTileBasesAtTilesPoses);
-                        LevelEditor.CurrentLayer.EraseTiles(_originalSelectedTilesPoses);
-                        LevelEditor.CurrentLayer.DrawTilesPreview(_originalSelectedTilesPoses, _originalTileBasesAtTilesPoses);
-                    }
-
-                    if (_originalSelectedTilesPoses.Length == 0)
-                    {
-                        LevelEditor.CurrentLayer.EraseTiles(_originalSelectedTilesPoses);
-                    }
-
-                    _movingTilePoses = new Vector3Int[_originalSelectedTilesPoses.Length];
-                    for (int i = 0; i < _originalSelectedTilesPoses.Length; i++)
-                    {
-                        _movingTilePoses[i] = _originalSelectedTilesPoses[i];
-                    }
                 }
             }
 
@@ -112,8 +93,7 @@ namespace Ultra.LevelEditor
             {
                 if (CurrentMouseCellPos != LastCellPos || CurrentMouseCellPos == _startCellPos)
                 {
-                    Selection.BuildBoxSelectionActive(new Vector2Int(_startCellPos.x, _startCellPos.y), new Vector2Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
-                    Selection.DrawActive();
+                    Selection.BuildActive(new Vector3Int(_startCellPos.x, _startCellPos.y), new Vector3Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
                 }
             }
             if (BoxSelectState == SelectStates.Move)
@@ -121,54 +101,32 @@ namespace Ultra.LevelEditor
                 _movedDistance = CurrentMouseCellPos - _startCellPos;
                 if (_movedDistance != _lastMovedDistance)
                 {
-                    Selection.MoveSelectionPreview(_movedDistance);
-
-                    LevelEditor.CurrentLayer.ClearAllPreviewTiles();
-                    LevelEditor.CurrentLayer.DrawTilesInDict(_movingTilePoses);
-
-                    for (int i = 0; i < _originalSelectedTilesPoses.Length; i++)
-                    {
-                        _movingTilePoses[i].x = _originalSelectedTilesPoses[i].x + _movedDistance.x;
-                        _movingTilePoses[i].y = _originalSelectedTilesPoses[i].y + _movedDistance.y;
-                    }
-
-                    LevelEditor.CurrentLayer.DrawTilesPreview(_movingTilePoses, _originalTileBasesAtTilesPoses);
-
+                    Selection.MoveSelected(_movedDistance);
                     _lastMovedDistance = _movedDistance;
                 }
             }
-
         }
         protected override void OnMouseLeftButtonUp()
         {
             if (BoxSelectState == SelectStates.New)
             {
-                Selection.ClearDrawnSelected();
+                Selection.ClearSelected();
+                Selection.ClearActive();
 
                 if (CurrentMouseCellPos != _startCellPos)
                 {
-                    Selection.BuildBoxSelection(new Vector2Int(_startCellPos.x, _startCellPos.y), new Vector2Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
-                    Selection.ClearDrawnActive();
-                    Selection.DrawSelected();
+                    Selection.BuildSelected(new Vector3Int(_startCellPos.x, _startCellPos.y), new Vector3Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
                 }
-                else
-                {
-                    Selection.ClearDrawnActive();
-                    Selection.ClearSelectedSelectionData();
-                }
-
-                SaveAndDrawTiles(_movingTilePoses, _originalTileBasesAtTilesPoses);
             }
             if (BoxSelectState == SelectStates.Additive)
             {
-                Selection.BuildBoxSelectionAdditive(new Vector2Int(_startCellPos.x, _startCellPos.y), new Vector2Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
-                Selection.ClearDrawnActive();
-                Selection.DrawSelected();
+                Selection.ClearActive();
+                Selection.BuildSelectedAdditive(new Vector3Int(_startCellPos.x, _startCellPos.y), new Vector3Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
             }
             if (BoxSelectState == SelectStates.Move)
             {
-                Selection.BuildMovedSelectionData(CurrentMouseCellPos - _startCellPos);
-                Selection.DrawSelected();
+                Selection.MoveSelected(CurrentMouseCellPos - _startCellPos);
+                Selection.MoveSelectedMouseUp(CurrentMouseCellPos - _startCellPos);
             }
         }
         protected override void PersistUpdate()
@@ -179,34 +137,9 @@ namespace Ultra.LevelEditor
                 {
                     if (Input.GetKeyDown(KeyCode.D))
                     {
-                        Selection.ClearSelectedSelectionData();
-                        Selection.ClearDrawnSelected();
+                        Selection.ClearSelected();
                     }
                 }
-            }
-        }
-        public void SelectTiles()
-        {
-
-        }
-
-        public void DeterminePreviewTiles(ref Vector3Int[] tilePoses, ref TileBase[] tileBases)
-        {
-            tilePoses = Selection.GetSelectedPreviewTiles();
-            tileBases = LevelEditor.CurrentLayer.GetPreviewTileBases(tilePoses);
-        }
-        public void DetermineTiles(ref Vector3Int[] tilePoses, ref TileBase[] tileBases)
-        {
-            tilePoses = Selection.GetSelectedTiles();
-            tileBases = LevelEditor.CurrentLayer.GetTileBases(tilePoses);
-        }
-
-        public void SaveAndDrawTiles(Vector3Int[] tilePoses, TileBase[] tileBases)
-        {
-            if (_originalSelectedTilesPoses != null && _movingTilePoses != null)
-            {
-                LevelEditor.CurrentLayer.ClearAllPreviewTiles();
-                LevelEditor.CurrentLayer.DrawTiles(tilePoses, tileBases);
             }
         }
     }

@@ -36,6 +36,11 @@ namespace Ultra.LevelEditor
             SetTiles(poses, tileBases);
             SaveTiles(poses, tileBases);
         }
+        public void DrawTiles(UTileData[] tileDatas)
+        {
+            SetTiles(tileDatas);
+            SaveTiles(tileDatas);
+        }
         public void DrawTilesInDict(Vector3Int[] poses)
         {
             for (int i = 0; i < poses.Length; i++)
@@ -45,16 +50,6 @@ namespace Ultra.LevelEditor
                     LayerTileMap.SetTile(poses[i], _tileDataDict[poses[i]].TileBase);
                 }
             }
-        }
-        public void DrawTilesPreview(Vector3Int[] poses, TileBase tile)
-        {
-            SetTiles(poses, tile);
-            SavePreviewTiles(poses, tile);
-        }
-        public void DrawTilesPreview(Vector3Int[] poses, TileBase[] tileBases)
-        {
-            SetTiles(poses, tileBases);
-            SavePreviewTiles(poses, tileBases);
         }
 
         /// <summary>
@@ -76,22 +71,23 @@ namespace Ultra.LevelEditor
                 EraseTilePreview(poses[i]);
             }
         }
-        public void ErasePreviewTilesNotInTileDataDict(Vector3Int[] poses)
+        public void EraseTilesPreview(UTileData[] tileDatas)
         {
-            for (int i = 0; i < poses.Length; i++)
+            for (int i = 0; i < tileDatas.Length; i++)
             {
-                if (!_tileDataDict.ContainsKey(poses[i]))
-                {
-                    EraseTilePreview(poses[i]);
-                }
+                EraseTilePreview(tileDatas[i].Pos);
             }
-            RemovePreviewTiles(poses);
         }
         
         public void EraseTiles(Vector3Int[] poses)
         {
             EraseTilesPreview(poses);
             RemoveTiles(poses);
+        }
+        public void EraseTiles(UTileData[] tileDatas)
+        {
+            EraseTilesPreview(tileDatas);
+            RemoveTiles(tileDatas);
         }
 
         public void ClearTiles(Vector3Int[] cellPoses)
@@ -141,6 +137,35 @@ namespace Ultra.LevelEditor
             }
             return tilePoses.ToArray();
         }
+        public Vector3Int[] GetTilePoses(UTileData[] tileDatas)
+        {
+            List<Vector3Int> tilePoses = new List<Vector3Int>();
+            for (int i = 0; i < tileDatas.Length; i++)
+            {
+                tilePoses.Add(tileDatas[i].Pos);
+            }
+            return tilePoses.ToArray();
+        }
+        public UTileData GetTileData(Vector3Int cellPos)
+        {
+            if(_tileDataDict.ContainsKey(cellPos))
+            {
+                return _tileDataDict[cellPos];
+            }
+            return new UTileData();
+        }
+        public UTileData[] GetTileDatas(Vector3Int[] cellPoses)
+        {
+            List<UTileData> tileDatas = new List<UTileData>();
+            for (int i = 0; i < cellPoses.Length; i++)
+            {
+                if (_tileDataDict.ContainsKey(cellPoses[i]))
+                {
+                    tileDatas.Add(_tileDataDict[cellPoses[i]]);
+                }
+            }
+            return tileDatas.ToArray();
+        }
         public TileBase GetTileBase(Vector3Int cellPos)
         {
             if(_tileDataDict.ContainsKey(cellPos))
@@ -149,7 +174,6 @@ namespace Ultra.LevelEditor
             }
             return null;
         }
-
         public TileBase[] GetTileBases(Vector3Int[] cellPoses)
         {
             TileBase[] tileBases = new TileBase[cellPoses.Length];
@@ -162,6 +186,16 @@ namespace Ultra.LevelEditor
             }
             return tileBases;
         }
+        public TileBase[] GetTileBases(UTileData[] tileDatas)
+        {
+            TileBase[] tileBases = new TileBase[tileDatas.Length];
+            for (int i = 0; i < tileDatas.Length; i++)
+            {
+                tileBases[i] = tileDatas[i].TileBase;
+            }
+            return tileBases;
+        }
+
         public TileBase[] GetPreviewTileBases(Vector3Int[] cellPoses)
         {
             TileBase[] tileBases = new TileBase[cellPoses.Length];
@@ -214,6 +248,14 @@ namespace Ultra.LevelEditor
                 LayerTileMap.SetTiles(poses, tileBasesToSet);
             }
         }
+        private void SetTiles(UTileData[] tileDatas)
+        {
+            for (int i = 0; i < tileDatas.Length; i++)
+            {
+                LayerTileMap.SetTile(tileDatas[i].Pos, tileDatas[i].TileBase);
+            }
+        }
+
         private void SaveTiles(Vector3Int[] poses, TileBase tileToSave)
         {
             for (int i = 0; i < poses.Length; i++)
@@ -242,6 +284,21 @@ namespace Ultra.LevelEditor
                 }
             }
         }
+        private void SaveTiles(UTileData[] tileDatas)
+        {
+            for (int i = 0; i < tileDatas.Length; i++)
+            {
+                if (!_tileDataDict.ContainsKey(tileDatas[i].Pos))
+                {
+                    _tileDataDict.Add(tileDatas[i].Pos, tileDatas[i]);
+                }
+                else
+                {
+                    _tileDataDict[tileDatas[i].Pos] = tileDatas[i];
+                }
+            }
+        }
+
         private void SavePreviewTiles(Vector3Int[] previewTilePoses, TileBase previewTileBase)
         {
             for (int i = 0; i < previewTilePoses.Length; i++)
@@ -271,7 +328,6 @@ namespace Ultra.LevelEditor
             }
         }
 
-
         private void RemoveTiles(Vector3Int[] poses)
         {
             for (int i = 0; i < poses.Length; i++)
@@ -279,6 +335,16 @@ namespace Ultra.LevelEditor
                 if (_tileDataDict.ContainsKey(poses[i]))
                 {
                     _tileDataDict.Remove(poses[i]);
+                }
+            }
+        }
+        private void RemoveTiles(UTileData[] tileDatas)
+        {
+            for (int i = 0; i < tileDatas.Length; i++)
+            {
+                if (_tileDataDict.ContainsKey(tileDatas[i].Pos))
+                {
+                    _tileDataDict.Remove(tileDatas[i].Pos);
                 }
             }
         }

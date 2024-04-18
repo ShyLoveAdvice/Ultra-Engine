@@ -65,11 +65,11 @@ namespace Ultra.LevelEditor
 
             Initialize();
         }
-        [Button]
-        public void TestSelectionBoundingBox()
-        {
-            Selection.DetermineBoundingBox(Selection.SelectedSelectionLineDict);
-        }
+        //[Button]
+        //public void TestSelectionBoundingBox()
+        //{
+        //    Selection.DetermineBoundingBox(Selection.SelectedSelectionLineDict);
+        //}
         private void Update()
         {
             InputManager.ReadInput();

@@ -30,7 +30,7 @@ namespace Ultra.LevelEditor
         {
             if (CircleSelectState == SelectStates.New)
             {
-                Selection.ClearDrawnSelected();
+                //Selection.ClearDrawnSelected();
             }
             else
             {

@@ -48,11 +48,11 @@ namespace Ultra.LevelEditor
         bool _setShapeStartPoint;
         bool _foundNextPoint = false;
         bool _examineEndPointKey;
-        public void ClearDrawnActive()
+        private void ClearDrawnActive()
         {
             ClearDrawnSelections(ref _drawnActiveLR);
         }
-        public void ClearDrawnSelected()
+        private void ClearDrawnSelected()
         {
             ClearDrawnSelections(ref _drawnSelectedLRs);
 
@@ -71,46 +71,31 @@ namespace Ultra.LevelEditor
             }
         }
 
-        public void DrawBoxActive()
+        private void DrawBoxActive()
         {
 
         }
-        public void DrawActive()
+        private void DrawActive()
         {
-            DrawSelection(ActiveSelectionPrefab, ref _drawnActiveLR, ActiveSelectionLineDict);
+            DrawSelection(ActiveSelectionPrefab, ref _drawnActiveLR, ActiveLineDict);
         }
-        public void DrawSelected(bool setScaleDraggers = true)
+        private void DrawSelected(bool setScaleDraggers = true)
         {
-            DrawSelection(selectedSelectionPrefab, ref _drawnSelectedLRs, SelectedSelectionLineDict);
+            DrawSelection(selectedSelectionPrefab, ref _drawnSelectedLRs, SelectedLineDict);
 
             if(setScaleDraggers)
             {
                 TurnOnScaleDraggers();
-                InitializeScaleDraggers(DetermineBoundingBox(SelectedSelectionLineDict));
+                InitializeScaleDraggers(DetermineBoundingBox(SelectedLineDict));
             }
         }
 
-        public void MoveSelectionPreview(Vector3Int movedDis)
+        private void DrawTiles(UTileData[] selectedTiles)
         {
-            List<Vector3> allDrawnSelectedPoints = new List<Vector3>();
-            foreach (LineRenderer lr in _drawnSelectedLRs)
-            {
-                if(_drawnSelectedPointsDict.ContainsKey(lr))
-                {
-                    _previewPoints = new Vector3[_drawnSelectedPointsDict[lr].Length];
-                    for (int i = 0; i < _previewPoints.Length; i++)
-                    {
-                        _previewPoints[i].x = _drawnSelectedPointsDict[lr][i].x + movedDis.x;
-                        _previewPoints[i].y = _drawnSelectedPointsDict[lr][i].y + movedDis.y;
-                        allDrawnSelectedPoints.Add(_previewPoints[i]);
-                    }
-                    lr.SetPositions(_previewPoints);
-                }
-            }
-
-            //TurnOffScaleDraggers();
-            InitializeScaleDraggers(DetermineBoundingBox(allDrawnSelectedPoints.ToArray()));
+            LevelEditor.PreviewLayer.ClearPreviewTiles();
+            LevelEditor.CurrentLayer.DrawTiles(selectedTiles);
         }
+
         private void SaveDrawnSelectedPoints()
         {
             _drawnSelectedPointsDict.Clear();

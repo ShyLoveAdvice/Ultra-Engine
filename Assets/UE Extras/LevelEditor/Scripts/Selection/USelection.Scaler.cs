@@ -18,10 +18,10 @@ namespace Ultra.LevelEditor
         public struct CellData
         {
             public bool IsEmpty;
-            public TileBase TileBase;
-            public CellData(bool isEmpty, TileBase tileBase)
+            public UTileData TileData;
+            public CellData(bool isEmpty, UTileData tileData)
             {
-                this.IsEmpty = isEmpty; this.TileBase = tileBase;
+                this.IsEmpty = isEmpty; this.TileData = tileData;
             }
         }
 
@@ -30,11 +30,11 @@ namespace Ultra.LevelEditor
         public GameObject ScaleDraggerPrefab;
         public UScaleDragger DraggingScaleDraggerPlaceHolder;
 
-        public Vector3Int[] scaledCells;
-        public Rect ScaledRect;
+        private Vector3Int[] _scaledCells;
+        private Rect _scaledRect;
+        private List<UTileData> _nonEmptyTileAtCellList = new List<UTileData>();
 
         private Dictionary<Vector3Int, CellData> _cellDataAtScaledCellPosDict;
-        private Vector3Int[] _beforeScaleSelectedTiles;
         private bool _begunDragging;
         private Rect _currentSelectedRect;
         private RectCornerDirections _draggingCornerDir;
@@ -60,21 +60,21 @@ namespace Ultra.LevelEditor
         {
             return selectionBoundingBox.max;
         }
-        public Dictionary<Vector3Int, CellData> ScaleSelectedCells(Vector3Int scalingPos, Vector3Int scaleOrigin, out Vector3Int[] scaledCells)
+        private Dictionary<Vector3Int, CellData> ScaleSelectedCells(Vector3Int scalingPos, Vector3Int scaleOrigin, out Vector3Int[] scaledCells)
         {
             Dictionary<Vector3Int, CellData> cellDataAtScaledCellPosDict = new Dictionary<Vector3Int, CellData>();
 
             Vector3Int scaleOriginCellPos = RectCornerToCellPos(scaleOrigin, _originCornerDir);
             Vector3Int[] distanceVectorsToOrigin = GetVectorsToPoint(GetAllCellsInSelectedRect(_currentSelectedRect), scaleOriginCellPos);
 
-            Vector3Int initialDistanceVector = _draggingCornerInitialPos - scaleOrigin;
-            Vector3Int currentDistanceVector = scalingPos - scaleOrigin;
+            Vector3Int initialDiagonalDistanceVector = _draggingCornerInitialPos - scaleOrigin;
+            Vector3Int currentDiagonalDistanceVector = scalingPos - scaleOrigin;
 
-            float xScale = (float)currentDistanceVector.x / (float)initialDistanceVector.x;
-            float yScale = (float)currentDistanceVector.y / (float)initialDistanceVector.y;
+            float xScale = (float)currentDiagonalDistanceVector.x / (float)initialDiagonalDistanceVector.x;
+            float yScale = (float)currentDiagonalDistanceVector.y / (float)initialDiagonalDistanceVector.y;
 
-            int xDisMult = initialDistanceVector.x >= 0 ? 1 : -1; xDisMult *= (int)Mathf.Sign(xScale);
-            int yDisMult = initialDistanceVector.y >= 0 ? 1 : -1; yDisMult *= (int)Mathf.Sign(yScale);
+            int xDisMult = initialDiagonalDistanceVector.x >= 0 ? 1 : -1; xDisMult *= (int)Mathf.Sign(xScale);
+            int yDisMult = initialDiagonalDistanceVector.y >= 0 ? 1 : -1; yDisMult *= (int)Mathf.Sign(yScale);
 
             int xStartMinus = xScale >= 0 ? 0 : 1;
             int yStartMinus = yScale >= 0 ? 0 : 1;
@@ -83,8 +83,9 @@ namespace Ultra.LevelEditor
 
             int unscaledXDis, unscaledYDis, scaledXDis, scaledYDis, scaledXDisAbs, scaledYDisAbs, xCeil, yCeil;
             xCeil = 1; yCeil = 1;
-            Vector3Int currentDis, currentWorldPos;
+            Vector3Int unscaledDis, unscaledWorldPos;
             CellData currentScaleData;
+            UTileData currentTileData;
             int count = 0;
             int lastYDis = 0;int lastXDis = 0;
             int lastScaledXDis = 0;int lastScaledYDis = 0;
@@ -100,16 +101,27 @@ namespace Ultra.LevelEditor
                 scaledXDisAbs = Mathf.Abs(scaledXDis);
                 scaledYDisAbs = Mathf.Abs(scaledYDis);
 
-                currentDis = distanceVectorsToOrigin[i];
-                if (initialDistanceVector.x < 0) currentDis.x *= -1;
-                if (initialDistanceVector.y < 0) currentDis.y *= -1;
+                unscaledDis = distanceVectorsToOrigin[i];
+                if (initialDiagonalDistanceVector.x < 0) unscaledDis.x *= -1;
+                if (initialDiagonalDistanceVector.y < 0) unscaledDis.y *= -1;
 
-                currentWorldPos = currentDis + scaleOriginCellPos;
-                currentScaleData = new CellData(!Contains(currentWorldPos), LevelEditor.CurrentLayer.GetTileBase(currentWorldPos));
-
-                if(currentDis.x != lastXDis)
+                unscaledWorldPos = unscaledDis + scaleOriginCellPos;
+                if(_selectedTileDatasDict.ContainsKey(unscaledWorldPos))
                 {
-                    lastXDis = currentDis.x;
+                    currentTileData = _selectedTileDatasDict[unscaledWorldPos];
+                }
+                else
+                {
+                    currentTileData = new UTileData();
+                }
+
+                currentTileData.Pos = unscaledWorldPos;
+
+                currentScaleData = new CellData(!Contains(unscaledWorldPos), currentTileData);
+
+                if(unscaledDis.x != lastXDis)
+                {
+                    lastXDis = unscaledDis.x;
                     xCeil = lastScaledXDis + 1;
                     lastScaledXDis = scaledXDis;
                     lastScaledYDis = 0;
@@ -118,9 +130,9 @@ namespace Ultra.LevelEditor
 
                 for (int x = xCeil; x <= scaledXDisAbs; x++)
                 {
-                    if(currentDis.y != lastYDis)
+                    if(unscaledDis.y != lastYDis)
                     {
-                        lastYDis = currentDis.y;
+                        lastYDis = unscaledDis.y;
                         yCeil = lastScaledYDis + 1;
                         lastScaledYDis = scaledYDis;
                     }
@@ -130,6 +142,7 @@ namespace Ultra.LevelEditor
                         count++;
                         if (!cellDataAtScaledCellPosDict.ContainsKey(scaledCellPos))
                         {
+                            currentScaleData.TileData.Pos = scaledCellPos;
                             cellDataAtScaledCellPosDict[scaledCellPos] = currentScaleData;
                         }
                     }
@@ -182,7 +195,7 @@ namespace Ultra.LevelEditor
             });
             return result;
         }
-        public Rect DetermineBoundingBox(Dictionary<int, int[][]> selectedLineDict)
+        private Rect DetermineBoundingBox(Dictionary<int, int[][]> selectedLineDict)
         {
             float xMin, yMin, xMax, yMax;
             xMin = int.MaxValue; yMin = int.MaxValue; xMax = int.MinValue; yMax = int.MinValue;
@@ -222,7 +235,7 @@ namespace Ultra.LevelEditor
 
             return selectedBoundingBox;
         }
-        public Rect DetermineBoundingBox(Vector3[] points)
+        private Rect DetermineBoundingBox(Vector3[] points)
         {
             float xMin, yMin, xMax, yMax;
             xMin = int.MaxValue; yMin = int.MaxValue; xMax = int.MinValue; yMax = int.MinValue;
@@ -253,7 +266,7 @@ namespace Ultra.LevelEditor
 
             return selectedBoundingBox;
         }
-        public Rect DetermineBoundingBox(Vector3Int[] cellPoses)
+        private Rect DetermineBoundingBox(Vector3Int[] cellPoses)
         {
             float xMin, yMin, xMax, yMax;
             xMin = int.MaxValue; yMin = int.MaxValue; xMax = int.MinValue; yMax = int.MinValue;
@@ -344,14 +357,6 @@ namespace Ultra.LevelEditor
             _originCornerPos = _cornerScaleDraggerDict[_originCornerDir].CornerWorldPos;
 
             DraggingScaleDraggerPlaceHolder.TurnOnScaleDragger();
-
-            _beforeScaleSelectedTiles = GetSelectedPreviewTiles();
-            if(_beforeScaleSelectedTiles.Length == 0)
-            {
-                _beforeScaleSelectedTiles = GetSelectedTiles();
-            }
-            LevelEditor.CurrentLayer.EraseTilesPreview(_beforeScaleSelectedTiles);
-            LevelEditor.PreviewLayer.DrawTilesPreview(_beforeScaleSelectedTiles, LevelEditor.CurrentLayer.GetTileBases(_beforeScaleSelectedTiles));
         }
         public void Drag(Vector3Int draggingCornerPos)
         {
@@ -359,9 +364,9 @@ namespace Ultra.LevelEditor
             {
                 _draggingCornerPos = draggingCornerPos;
 
-                _cellDataAtScaledCellPosDict = ScaleSelectedCells(_draggingCornerPos, _originCornerPos, out scaledCells);
+                _cellDataAtScaledCellPosDict = ScaleSelectedCells(_draggingCornerPos, _originCornerPos, out _scaledCells);
                 List<Vector3Int> nonEmptyCellList = new List<Vector3Int>();
-                List<TileBase> nonEmptyTileAtCellList = new List<TileBase>();
+                _nonEmptyTileAtCellList = new List<UTileData>();
                 if (_cellDataAtScaledCellPosDict != null)
                 {
                     foreach (var cellDataAtScaledCellPos in _cellDataAtScaledCellPosDict)
@@ -369,27 +374,32 @@ namespace Ultra.LevelEditor
                         if (!cellDataAtScaledCellPos.Value.IsEmpty)
                         {
                             nonEmptyCellList.Add(cellDataAtScaledCellPos.Key);
-                            nonEmptyTileAtCellList.Add(cellDataAtScaledCellPos.Value.TileBase);
+                            if(cellDataAtScaledCellPos.Value.TileData.TileBase != null)
+                            {
+                                _nonEmptyTileAtCellList.Add(cellDataAtScaledCellPos.Value.TileData);
+                            }
                         }
                     }
                 }
-                LevelEditor.PreviewLayer.ClearPreviewTiles();
-                LevelEditor.PreviewLayer.DrawTilesPreview(nonEmptyCellList.ToArray(), nonEmptyTileAtCellList.ToArray());
 
-                if (scaledCells.Length != 0)
+                Debug.Log($"nonEmptyTileAtCellList.Count: " + _nonEmptyTileAtCellList.Count);
+                LevelEditor.PreviewLayer.ClearPreviewTiles();
+                LevelEditor.PreviewLayer.DrawPreviewTiles(_nonEmptyTileAtCellList.ToArray());
+
+                if (_scaledCells.Length != 0)
                 {
-                    ScaledRect = DetermineBoundingBox(scaledCells);
+                    _scaledRect = DetermineBoundingBox(_scaledCells);
                 }
                 else
                 {
-                    ScaledRect.x = _originCornerPos.x;
-                    ScaledRect.y = _originCornerPos.y;
-                    ScaledRect.width = _draggingCornerPos.x - _originCornerPos.x;
-                    ScaledRect.height = _draggingCornerPos.y - _originCornerPos.y;
+                    _scaledRect.x = _originCornerPos.x;
+                    _scaledRect.y = _originCornerPos.y;
+                    _scaledRect.width = _draggingCornerPos.x - _originCornerPos.x;
+                    _scaledRect.height = _draggingCornerPos.y - _originCornerPos.y;
                 }
-                SetScaleDraggersWorldPos(ScaledRect);
+                SetScaleDraggersWorldPos(_scaledRect);
 
-                BuildActiveSelectionData(nonEmptyCellList.ToArray());
+                BuildActiveData(nonEmptyCellList.ToArray());
                 DrawActive();
                 _lastDraggingCornerPos = draggingCornerPos;
             }
@@ -398,7 +408,7 @@ namespace Ultra.LevelEditor
         public void EndDrag()
         {
             List<Vector3Int> nonEmptyCellList = new List<Vector3Int>();
-            List<TileBase> nonEmptyTileAtCellList = new List<TileBase>();
+            List<UTileData> nonEmptyTileAtCellList = new List<UTileData>();
             if (_cellDataAtScaledCellPosDict != null)
             {
                 foreach (var cellDataAtScaledCellPos in _cellDataAtScaledCellPosDict)
@@ -406,21 +416,20 @@ namespace Ultra.LevelEditor
                     if (!cellDataAtScaledCellPos.Value.IsEmpty)
                     {
                         nonEmptyCellList.Add(cellDataAtScaledCellPos.Key);
-                        nonEmptyTileAtCellList.Add(cellDataAtScaledCellPos.Value.TileBase);
+                        if(!(cellDataAtScaledCellPos.Value.TileData.TileBase == null))
+                        {
+                            nonEmptyTileAtCellList.Add(cellDataAtScaledCellPos.Value.TileData);
+                        }
                     }
                 }
-
             }
-            SetScaleDraggersWorldPos(ScaledRect);
+            SetScaleDraggersWorldPos(_scaledRect);
             DraggingScaleDraggerPlaceHolder.TurnOffScaleDragger();
 
             ClearActive();
-            BuildSelection(nonEmptyCellList.ToArray());
-            DrawSelected();
-
             LevelEditor.PreviewLayer.ClearPreviewTiles();
-            LevelEditor.CurrentLayer.EraseTiles(_beforeScaleSelectedTiles);
-            LevelEditor.CurrentLayer.DrawTiles(nonEmptyCellList.ToArray(), nonEmptyTileAtCellList.ToArray());
+            BuildSelected(nonEmptyCellList.ToArray(), nonEmptyTileAtCellList.ToArray(), false);
+            _moveOrigin = Vector3Int.zero;
 
             _begunDragging = false;
         }

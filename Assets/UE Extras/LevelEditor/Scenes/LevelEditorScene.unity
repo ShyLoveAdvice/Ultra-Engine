@@ -1004,10 +1004,10 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes:
-    - Name: ActiveSelectionLineDict
+    - Name: ActiveLineDict
       Entry: 6
       Data: 
-    - Name: SelectedSelectionLineDict
+    - Name: SelectedLineDict
       Entry: 6
       Data: 
     - Name: _cornerScaleDraggerDict
@@ -1036,7 +1036,6 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-  _selectedTiles: []
   ActiveSelectionPrefab: {fileID: 107176968556089653, guid: 8a347cdd7f1f76e47b5919f7f337f98f,
     type: 3}
   selectedSelectionPrefab: {fileID: 2679542706903485742, guid: 701bd14ec6aa0b7429464e185b5f1c55,
@@ -1052,6 +1051,7 @@ MonoBehaviour:
     y: 0
     width: 0
     height: 0
+  nonEmptyTileAtCellList: []
 --- !u!1 &1679983350
 GameObject:
   m_ObjectHideFlags: 0

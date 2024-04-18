@@ -49,7 +49,7 @@ namespace Ultra.LevelEditor
                 _movedDistance = CurrentMouseCellPos - _startMovingCellPos;
                 if (_movedDistance != _lastMovedDistance)
                 {
-                    Selection.MoveSelectionPreview(_movedDistance);
+                    //Selection.MoveSelectionPreview(_movedDistance);
 
                     _movingTilePoses = new Vector3Int[_originalSelectedTilesPoses.Length];
                     for (int i = 0; i < _originalSelectedTilesPoses.Length; i++)
@@ -58,8 +58,7 @@ namespace Ultra.LevelEditor
                         _movingTilePoses[i].y = _originalSelectedTilesPoses[i].y + _movedDistance.y;
                     }
 
-                    LevelEditor.CurrentLayer.ErasePreviewTilesNotInTileDataDict(_lastMovedTilePoses);
-                    LevelEditor.CurrentLayer.DrawTilesPreview(_movingTilePoses, LevelEditor.CurrentTileBase);
+                    //LevelEditor.CurrentLayer.ErasePreviewTilesNotInTileDataDict(_lastMovedTilePoses);
 
                     _lastMovedDistance = _movedDistance;
                     _lastMovedTilePoses = _movingTilePoses;
@@ -70,8 +69,8 @@ namespace Ultra.LevelEditor
         {
             if(_moveStarted)
             {
-                Selection.BuildMovedSelectionData(_movedDistance);
-                Selection.DrawSelected();
+                //Selection.MoveSelected(_movedDistance, );
+                //Selection.DrawSelected();
 
                 TileBase[] tileBasesInOriginalTilesPoses = LevelEditor.CurrentLayer.GetTileBases(_originalSelectedTilesPoses);
                 LevelEditor.CurrentLayer.EraseTiles(_originalSelectedTilesPoses);

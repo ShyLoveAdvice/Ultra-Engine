@@ -5,6 +5,8 @@ using UnityEngine;
 using System;
 using Sirenix.Utilities;
 using System.Linq;
+using MoreMountains.Tools;
+using UnityEngine.Tilemaps;
 
 namespace Ultra.LevelEditor
 {
@@ -12,226 +14,37 @@ namespace Ultra.LevelEditor
     {
         [Header("Selection Data"), Space(10)]
         /// <summary>
-        /// These two dictionaries save selections by using y value as key to access a value describing single or multiple lines in x axis direction
+        /// These two dictionaries save selected by using y value as key to access a value describing single or multiple lines in x axis direction
         /// </summary>
-        public Dictionary<int, int[][]> ActiveSelectionLineDict;
-        public Dictionary<int, int[][]> SelectedSelectionLineDict;
-        public Vector3Int[] SelectedTiles { get => _selectedTiles; }
-        public Vector3Int[] _selectedTiles;
+        [HideInInspector] public Dictionary<int, int[][]> ActiveLineDict;
+        [HideInInspector] public Dictionary<int, int[][]> SelectedLineDict;
+        public UTileData[] SelectedTileDatas { get => _selectedTileDatas; }
+        public Vector3Int[] SelectedCellPoses { get => _selectedCellPoses; }
+        [SerializeField] private UTileData[] _selectedTileDatas = new UTileData[0];
+        /*[SerializeField]*/ private Vector3Int[] _selectedCellPoses = new Vector3Int[0];
+        public Dictionary<Vector3Int,  UTileData> _selectedTileDatasDict = new Dictionary<Vector3Int, UTileData>();
+
+        private Vector3Int _moveOrigin;
+        private Vector3Int[] _originalSelectedCellPoses;
+        private UTileData[] _originalSelectedTileDatas;
         private const int LINEXMIN = 0;
         private const int LINEXMAX = 1;
         private int[] _toBeRemovedIndexes;
-
         int _lineXMin, _lineXMax;
-        private void BuildSelectionData(Vector3Int[] selectedCellPoses)
+        private void BuildSelectedData(Vector3Int[] selectedCellPoses)
         {
-            ClearSelectedSelectionData();
-            foreach (Vector3Int currentCellPos in selectedCellPoses)
-            {
-                int x, y, xMin, xMax;
-                x = currentCellPos.x; y = currentCellPos.y; xMin = x; xMax = x;
-                if (!SelectedSelectionLineDict.ContainsKey(y))
-                {
-                    SelectedSelectionLineDict.Add(y, new int[][] { new int[] { currentCellPos.x, currentCellPos.x } });
-                }
-                else
-                {
-                    bool foundMin = false;
-                    bool foundMax = false;
-                    bool minIndexInMiddle = false;
-                    bool maxIndexInMiddle = false;
-                    int minIndex = -1;
-                    int maxIndex = -1;
-
-
-                    for (int j = 0; j < SelectedSelectionLineDict[y].Length; j++)
-                    {
-                        if (j == 0)
-                        {
-                            if (xMax < SelectedSelectionLineDict[y][0][LINEXMIN] || xMin > SelectedSelectionLineDict[y][SelectedSelectionLineDict[y].Length - 1][LINEXMAX])
-                            {
-                                if (!(xMax == SelectedSelectionLineDict[y][0][LINEXMIN] - 1) && !(xMin == SelectedSelectionLineDict[y][SelectedSelectionLineDict[y].Length - 1][LINEXMAX] + 1))
-                                {
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (xMin < SelectedSelectionLineDict[y][j][LINEXMIN])
-                        {
-                            if (!foundMin)
-                            {
-                                minIndex = j;
-                                foundMin = true;
-                            }
-                        }
-                        if ((xMin >= SelectedSelectionLineDict[y][j][LINEXMIN] && xMin <= SelectedSelectionLineDict[y][j][LINEXMAX]) || xMin == SelectedSelectionLineDict[y][j][LINEXMAX] + 1)
-                        {
-                            if (!foundMin)
-                            {
-                                minIndex = j;
-                                foundMin = true;
-                                minIndexInMiddle = true;
-                            }
-                        }
-                        if (xMax > SelectedSelectionLineDict[y][j][LINEXMAX])
-                        {
-                            if (!foundMax)
-                            {
-                                maxIndex = j;
-                            }
-                        }
-                        if ((xMax >= SelectedSelectionLineDict[y][j][LINEXMIN] && xMax <= SelectedSelectionLineDict[y][j][LINEXMAX]) || xMax == SelectedSelectionLineDict[y][j][LINEXMIN] - 1)
-                        {
-                            if (!foundMax)
-                            {
-                                maxIndex = j;
-                                foundMax = true;
-                                maxIndexInMiddle = true;
-                            }
-                        }
-                    }
-
-                    //remove overlapped lines
-                    if (minIndex != -1 && maxIndex != -1)
-                    {
-                        if (minIndexInMiddle)
-                        {
-                            xMin = SelectedSelectionLineDict[y][minIndex][LINEXMIN];
-                        }
-                        if (maxIndexInMiddle)
-                        {
-                            xMax = SelectedSelectionLineDict[y][maxIndex][LINEXMAX];
-                        }
-
-                        _toBeRemovedIndexes = new int[maxIndex - minIndex + 1];
-                        for (int index = minIndex; index <= maxIndex; index++)
-                        {
-                            _toBeRemovedIndexes[index - minIndex] = index;
-                        }
-
-                        SelectedSelectionLineDict[y] = RemoveIndexes(SelectedSelectionLineDict[y], _toBeRemovedIndexes);
-                    }
-
-                    //add new line to current lines and sort current lines
-                    SelectedSelectionLineDict[y] = AddNewLine(SelectedSelectionLineDict[y], xMin, xMax);
-                    Sort(SelectedSelectionLineDict[y], LINEXMIN);
-                }
-            }
+            ClearSelectedData();
+            BuildLineData(selectedCellPoses, SelectedLineDict);
         }
-        private void BuildActiveSelectionData(Vector3Int[] activeSelectionCellPoses)
+        private void BuildBoxSelectedData(int xMin, int yMin, int xMax, int yMax)
         {
-            ClearActiveSelectionData();
-            foreach (Vector3Int currentCellPos in activeSelectionCellPoses)
-            {
-                int x, y, xMin, xMax;
-                x = currentCellPos.x; y = currentCellPos.y; xMin = x; xMax = x;
-                if (!ActiveSelectionLineDict.ContainsKey(y))
-                {
-                    ActiveSelectionLineDict.Add(y, new int[][] { new int[] { currentCellPos.x, currentCellPos.x } });
-                }
-                else
-                {
-                    bool foundMin = false;
-                    bool foundMax = false;
-                    bool minIndexInMiddle = false;
-                    bool maxIndexInMiddle = false;
-                    int minIndex = -1;
-                    int maxIndex = -1;
-
-
-                    for (int j = 0; j < ActiveSelectionLineDict[y].Length; j++)
-                    {
-                        if (j == 0)
-                        {
-                            if (xMax < ActiveSelectionLineDict[y][0][LINEXMIN] || xMin > ActiveSelectionLineDict[y][ActiveSelectionLineDict[y].Length - 1][LINEXMAX])
-                            {
-                                if (!(xMax == ActiveSelectionLineDict[y][0][LINEXMIN] - 1) && !(xMin == ActiveSelectionLineDict[y][ActiveSelectionLineDict[y].Length - 1][LINEXMAX] + 1))
-                                {
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (xMin < ActiveSelectionLineDict[y][j][LINEXMIN])
-                        {
-                            if (!foundMin)
-                            {
-                                minIndex = j;
-                                foundMin = true;
-                            }
-                        }
-                        if ((xMin >= ActiveSelectionLineDict[y][j][LINEXMIN] && xMin <= ActiveSelectionLineDict[y][j][LINEXMAX]) || xMin == ActiveSelectionLineDict[y][j][LINEXMAX] + 1)
-                        {
-                            if (!foundMin)
-                            {
-                                minIndex = j;
-                                foundMin = true;
-                                minIndexInMiddle = true;
-                            }
-                        }
-                        if (xMax > ActiveSelectionLineDict[y][j][LINEXMAX])
-                        {
-                            if (!foundMax)
-                            {
-                                maxIndex = j;
-                            }
-                        }
-                        if ((xMax >= ActiveSelectionLineDict[y][j][LINEXMIN] && xMax <= ActiveSelectionLineDict[y][j][LINEXMAX]) || xMax == ActiveSelectionLineDict[y][j][LINEXMIN] - 1)
-                        {
-                            if (!foundMax)
-                            {
-                                maxIndex = j;
-                                foundMax = true;
-                                maxIndexInMiddle = true;
-                            }
-                        }
-                    }
-
-                    //remove overlapped lines
-                    if (minIndex != -1 && maxIndex != -1)
-                    {
-                        if (minIndexInMiddle)
-                        {
-                            xMin = ActiveSelectionLineDict[y][minIndex][LINEXMIN];
-                        }
-                        if (maxIndexInMiddle)
-                        {
-                            xMax = ActiveSelectionLineDict[y][maxIndex][LINEXMAX];
-                        }
-
-                        _toBeRemovedIndexes = new int[maxIndex - minIndex + 1];
-                        for (int index = minIndex; index <= maxIndex; index++)
-                        {
-                            _toBeRemovedIndexes[index - minIndex] = index;
-                        }
-
-                        ActiveSelectionLineDict[y] = RemoveIndexes(ActiveSelectionLineDict[y], _toBeRemovedIndexes);
-                    }
-
-                    //add new line to current lines and sort current lines
-                    ActiveSelectionLineDict[y] = AddNewLine(ActiveSelectionLineDict[y], xMin, xMax);
-                    Sort(ActiveSelectionLineDict[y], LINEXMIN);
-                }
-            }
-        }
-        private void BuildBoxSelectionData(int xMin, int yMin, int xMax, int yMax)
-        {
-            ClearSelectedSelectionData();
+            ClearSelectedData();
             for (int y = yMin; y <= yMax; y++)
             {
-                SelectedSelectionLineDict.Add(y, new int[][] { new int[] { xMin, xMax } });
+                SelectedLineDict.Add(y, new int[][] { new int[] { xMin, xMax } });
             }
         }
-        private void BuildActiveBoxSelectionData(int xMin, int yMin, int xMax, int yMax)
-        {
-            ActiveSelectionLineDict.Clear();
-            for (int y = yMin; y <= yMax; y++)
-            {
-                ActiveSelectionLineDict.Add(y, new int[][] { new int[] { xMin, xMax } });
-            }
-        }
-        private void BuildAdditiveBoxSelectionData(int xMin, int yMin, int xMax, int yMax)
+        private void BuildBoxAdditiveSelectedData(int xMin, int yMin, int xMax, int yMax)
         {
             int xMinOriginal = xMin;
             int xMaxOriginal = xMax;
@@ -241,7 +54,7 @@ namespace Ultra.LevelEditor
                 xMin = xMinOriginal;
                 xMax = xMaxOriginal;
 
-                if (SelectedSelectionLineDict.ContainsKey(y))
+                if (SelectedLineDict.ContainsKey(y))
                 {
                     bool foundMin = false;
                     bool foundMax = false;
@@ -251,20 +64,20 @@ namespace Ultra.LevelEditor
                     int maxIndex = -1;
 
 
-                    for (int j = 0; j < SelectedSelectionLineDict[y].Length; j++)
+                    for (int j = 0; j < SelectedLineDict[y].Length; j++)
                     {
                         if (j == 0)
                         {
-                            if (xMax < SelectedSelectionLineDict[y][0][LINEXMIN] || xMin > SelectedSelectionLineDict[y][SelectedSelectionLineDict[y].Length - 1][LINEXMAX])
+                            if (xMax < SelectedLineDict[y][0][LINEXMIN] || xMin > SelectedLineDict[y][SelectedLineDict[y].Length - 1][LINEXMAX])
                             {
-                                if (!(xMax == SelectedSelectionLineDict[y][0][LINEXMIN] - 1) && !(xMin == SelectedSelectionLineDict[y][SelectedSelectionLineDict[y].Length - 1][LINEXMAX] + 1))
+                                if (!(xMax == SelectedLineDict[y][0][LINEXMIN] - 1) && !(xMin == SelectedLineDict[y][SelectedLineDict[y].Length - 1][LINEXMAX] + 1))
                                 {
                                     break;
                                 }
                             }
                         }
 
-                        if (xMin < SelectedSelectionLineDict[y][j][LINEXMIN])
+                        if (xMin < SelectedLineDict[y][j][LINEXMIN])
                         {
                             if (!foundMin)
                             {
@@ -272,7 +85,7 @@ namespace Ultra.LevelEditor
                                 foundMin = true;
                             }
                         }
-                        if ((xMin >= SelectedSelectionLineDict[y][j][LINEXMIN] && xMin <= SelectedSelectionLineDict[y][j][LINEXMAX]) || xMin == SelectedSelectionLineDict[y][j][LINEXMAX] + 1)
+                        if ((xMin >= SelectedLineDict[y][j][LINEXMIN] && xMin <= SelectedLineDict[y][j][LINEXMAX]) || xMin == SelectedLineDict[y][j][LINEXMAX] + 1)
                         {
                             if (!foundMin)
                             {
@@ -281,14 +94,14 @@ namespace Ultra.LevelEditor
                                 minIndexInMiddle = true;
                             }
                         }
-                        if (xMax > SelectedSelectionLineDict[y][j][LINEXMAX])
+                        if (xMax > SelectedLineDict[y][j][LINEXMAX])
                         {
                             if (!foundMax)
                             {
                                 maxIndex = j;
                             }
                         }
-                        if ((xMax >= SelectedSelectionLineDict[y][j][LINEXMIN] && xMax <= SelectedSelectionLineDict[y][j][LINEXMAX]) || xMax == SelectedSelectionLineDict[y][j][LINEXMIN] - 1)
+                        if ((xMax >= SelectedLineDict[y][j][LINEXMIN] && xMax <= SelectedLineDict[y][j][LINEXMAX]) || xMax == SelectedLineDict[y][j][LINEXMIN] - 1)
                         {
                             if (!foundMax)
                             {
@@ -304,11 +117,11 @@ namespace Ultra.LevelEditor
                     {
                         if (minIndexInMiddle)
                         {
-                            xMin = SelectedSelectionLineDict[y][minIndex][LINEXMIN];
+                            xMin = SelectedLineDict[y][minIndex][LINEXMIN];
                         }
                         if (maxIndexInMiddle)
                         {
-                            xMax = SelectedSelectionLineDict[y][maxIndex][LINEXMAX];
+                            xMax = SelectedLineDict[y][maxIndex][LINEXMAX];
                         }
 
                         _toBeRemovedIndexes = new int[maxIndex - minIndex + 1];
@@ -317,45 +130,246 @@ namespace Ultra.LevelEditor
                             _toBeRemovedIndexes[index - minIndex] = index;
                         }
 
-                        SelectedSelectionLineDict[y] = RemoveIndexes(SelectedSelectionLineDict[y], _toBeRemovedIndexes);
+                        SelectedLineDict[y] = RemoveIndexes(SelectedLineDict[y], _toBeRemovedIndexes);
                     }
 
                     //add new line to current lines and sort current lines
-                    SelectedSelectionLineDict[y] = AddNewLine(SelectedSelectionLineDict[y], xMin, xMax);
-                    Sort(SelectedSelectionLineDict[y], LINEXMIN);
+                    SelectedLineDict[y] = AddNewLine(SelectedLineDict[y], xMin, xMax);
+                    Sort(SelectedLineDict[y], LINEXMIN);
                 }
                 else
                 {
-                    SelectedSelectionLineDict.Add(y, new int[][] { new int[] { xMin, xMax } });
+                    SelectedLineDict.Add(y, new int[][] { new int[] { xMin, xMax } });
                 }
 
             }
         }
-        public void BuildMovedSelectionData(Vector3Int movedDis)
+        private void BuildActiveData(Vector3Int[] activeCellPoses)
         {
-            Dictionary<int, int[][]> tmpDict = new Dictionary<int, int[][]>();
-
-            foreach (int yi in SelectedSelectionLineDict.Keys)
+            ClearActiveData();
+            BuildLineData(activeCellPoses, ActiveLineDict);
+        }
+        private void BuildBoxActiveData(int xMin, int yMin, int xMax, int yMax)
+        {
+            ActiveLineDict.Clear();
+            for (int y = yMin; y <= yMax; y++)
             {
-                for (int i = 0; i < SelectedSelectionLineDict[yi].Length; i++)
-                {
-                    SelectedSelectionLineDict[yi][i][LINEXMIN] += movedDis.x; 
-                    SelectedSelectionLineDict[yi][i][LINEXMAX] += movedDis.x;
-                }
-
-                tmpDict.Add(yi + movedDis.y, SelectedSelectionLineDict[yi]);
+                ActiveLineDict.Add(y, new int[][] { new int[] { xMin, xMax } });
             }
-            
-            SelectedSelectionLineDict = tmpDict;
+        }
+        private void BuildSelectedTileData(Vector3Int[] selectedCellPoses)
+        {
+            _selectedTileDatas = LevelEditor.CurrentLayer.GetTileDatas(selectedCellPoses);
+            LevelEditor.CurrentLayer.EraseTiles(selectedCellPoses);
+
+            _originalSelectedTileDatas = new UTileData[_selectedTileDatas.Length];
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                _originalSelectedTileDatas[i] = _selectedTileDatas[i];
+            }
+
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                if (!_selectedTileDatasDict.ContainsKey(_selectedTileDatas[i].Pos))
+                {
+                    _selectedTileDatasDict.Add(_selectedTileDatas[i].Pos, _selectedTileDatas[i]);
+                }
+                else
+                {
+                    _selectedTileDatasDict[_selectedTileDatas[i].Pos] = _selectedTileDatas[i];
+                }
+            }
+        }
+        private void BuildSelectedTileData(UTileData[] selectedTileDatas)
+        {
+            _selectedTileDatas = selectedTileDatas;
+
+            _originalSelectedTileDatas = new UTileData[_selectedTileDatas.Length];
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                _originalSelectedTileDatas[i] = _selectedTileDatas[i];
+            }
+
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                if (!_selectedTileDatasDict.ContainsKey(_selectedTileDatas[i].Pos))
+                {
+                    _selectedTileDatasDict.Add(_selectedTileDatas[i].Pos, _selectedTileDatas[i]);
+                }
+                else
+                {
+                    _selectedTileDatasDict[_selectedTileDatas[i].Pos] = _selectedTileDatas[i];
+                }
+            }
+        }
+        private void BuildSelectedTileDataAdditive(Vector3Int[] selectedCellPosesAdditive)
+        {
+            UTileData[] selectedTileDatasAdditive = LevelEditor.CurrentLayer.GetTileDatas(selectedCellPosesAdditive);
+            LevelEditor.CurrentLayer.EraseTiles(selectedCellPosesAdditive);
+
+            _selectedTileDatas = _selectedTileDatas.Concat(selectedTileDatasAdditive).ToArray();
+
+            _originalSelectedTileDatas = new UTileData[_selectedTileDatas.Length];
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                _originalSelectedTileDatas[i] = _selectedTileDatas[i];
+            }
+
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                if (!_selectedTileDatasDict.ContainsKey(_selectedTileDatas[i].Pos))
+                {
+                    _selectedTileDatasDict.Add(_selectedTileDatas[i].Pos, _selectedTileDatas[i]);
+                }
+                else
+                {
+                    _selectedTileDatasDict[_selectedTileDatas[i].Pos] = _selectedTileDatas[i];
+                }
+            }
+        }
+        private void BuildSelectedTileData(int xMin, int yMin, int xMax, int yMax)
+        {
+            List<Vector3Int> selectedCellList = new List<Vector3Int>();
+            for (int y = yMin; y <= yMax; y++)
+            {
+                for (int x = xMin; x <= xMax; x++)
+                {
+                    selectedCellList.Add(new Vector3Int(x, y));
+                }
+            }
+            Vector3Int[] selectedCellPoses = selectedCellList.ToArray();
+            _originalSelectedCellPoses = selectedCellPoses;
+
+            _selectedTileDatas = LevelEditor.CurrentLayer.GetTileDatas(selectedCellPoses);
+            _originalSelectedTileDatas = new UTileData[_selectedTileDatas.Length];
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                _originalSelectedTileDatas[i] = _selectedTileDatas[i];
+            }
+            LevelEditor.CurrentLayer.EraseTiles(selectedCellPoses);
+
+            for (int i = 0; i < _selectedTileDatas.Length; i++)
+            {
+                if (!_selectedTileDatasDict.ContainsKey(_selectedTileDatas[i].Pos))
+                {
+                    _selectedTileDatasDict.Add(_selectedTileDatas[i].Pos, _selectedTileDatas[i]);
+                }
+                else
+                {
+                    _selectedTileDatasDict[_selectedTileDatas[i].Pos] = _selectedTileDatas[i];
+                }
+            }
         }
 
-        public void ClearActiveSelectionData()
+        private void BuildLineData(Vector3Int[] selectionCellPoses, Dictionary<int, int[][]> selectionLineDict)
         {
-            ActiveSelectionLineDict.Clear();
+            foreach (Vector3Int currentCellPos in selectionCellPoses)
+            {
+                int x, y, xMin, xMax;
+                x = currentCellPos.x; y = currentCellPos.y; xMin = x; xMax = x;
+                if (!selectionLineDict.ContainsKey(y))
+                {
+                    selectionLineDict.Add(y, new int[][] { new int[] { currentCellPos.x, currentCellPos.x } });
+                }
+                else
+                {
+                    bool foundMin = false;
+                    bool foundMax = false;
+                    bool minIndexInMiddle = false;
+                    bool maxIndexInMiddle = false;
+                    int minIndex = -1;
+                    int maxIndex = -1;
+
+
+                    for (int j = 0; j < selectionLineDict[y].Length; j++)
+                    {
+                        if (j == 0)
+                        {
+                            if (xMax < selectionLineDict[y][0][LINEXMIN] || xMin > selectionLineDict[y][selectionLineDict[y].Length - 1][LINEXMAX])
+                            {
+                                if (!(xMax == selectionLineDict[y][0][LINEXMIN] - 1) && !(xMin == selectionLineDict[y][selectionLineDict[y].Length - 1][LINEXMAX] + 1))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (xMin < selectionLineDict[y][j][LINEXMIN])
+                        {
+                            if (!foundMin)
+                            {
+                                minIndex = j;
+                                foundMin = true;
+                            }
+                        }
+                        if ((xMin >= selectionLineDict[y][j][LINEXMIN] && xMin <= selectionLineDict[y][j][LINEXMAX]) || xMin == selectionLineDict[y][j][LINEXMAX] + 1)
+                        {
+                            if (!foundMin)
+                            {
+                                minIndex = j;
+                                foundMin = true;
+                                minIndexInMiddle = true;
+                            }
+                        }
+                        if (xMax > selectionLineDict[y][j][LINEXMAX])
+                        {
+                            if (!foundMax)
+                            {
+                                maxIndex = j;
+                            }
+                        }
+                        if ((xMax >= selectionLineDict[y][j][LINEXMIN] && xMax <= selectionLineDict[y][j][LINEXMAX]) || xMax == selectionLineDict[y][j][LINEXMIN] - 1)
+                        {
+                            if (!foundMax)
+                            {
+                                maxIndex = j;
+                                foundMax = true;
+                                maxIndexInMiddle = true;
+                            }
+                        }
+                    }
+
+                    //remove overlapped lines
+                    if (minIndex != -1 && maxIndex != -1)
+                    {
+                        if (minIndexInMiddle)
+                        {
+                            xMin = selectionLineDict[y][minIndex][LINEXMIN];
+                        }
+                        if (maxIndexInMiddle)
+                        {
+                            xMax = selectionLineDict[y][maxIndex][LINEXMAX];
+                        }
+
+                        _toBeRemovedIndexes = new int[maxIndex - minIndex + 1];
+                        for (int index = minIndex; index <= maxIndex; index++)
+                        {
+                            _toBeRemovedIndexes[index - minIndex] = index;
+                        }
+
+                        selectionLineDict[y] = RemoveIndexes(selectionLineDict[y], _toBeRemovedIndexes);
+                    }
+
+                    //add new line to current lines and sort current lines
+                    selectionLineDict[y] = AddNewLine(selectionLineDict[y], xMin, xMax);
+                    Sort(selectionLineDict[y], LINEXMIN);
+                }
+            }
         }
-        public void ClearSelectedSelectionData()
+
+        private void ClearActiveData()
         {
-            SelectedSelectionLineDict.Clear();
+            ActiveLineDict.Clear();
+        }
+        private void ClearSelectedData()
+        {
+            SelectedLineDict.Clear();
+        }
+
+        private void ClearSelectedTileData()
+        {
+            _selectedTileDatas = new UTileData[0];
+            _originalSelectedTileDatas = new UTileData[0];
         }
         
         private int[][] AddNewLine(int[][] lines, int xMin, int xMax)
