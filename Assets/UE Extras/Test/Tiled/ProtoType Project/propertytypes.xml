@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objecttypes>
+ <objecttype name="Invisible" color="#a0a0a4">
+  <property name="unity:isTrigger" type="bool" default="false"/>
+ </objecttype>
+ <objecttype name="LevelBound" color="#a0a0a4">
+  <property name="unity:isTrigger" type="bool" default="true"/>
+ </objecttype>
+</objecttypes>

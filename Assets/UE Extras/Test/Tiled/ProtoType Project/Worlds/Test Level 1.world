@@ -1,0 +1,27 @@
+{
+    "maps": [
+        {
+            "fileName": "../Maps/prototype_tilemap.tmx",
+            "height": 320,
+            "width": 480,
+            "x": 0,
+            "y": 128
+        },
+        {
+            "fileName": "../Maps/prototype2.tmx",
+            "height": 480,
+            "width": 640,
+            "x": -640,
+            "y": 128
+        },
+        {
+            "fileName": "../Maps/prototype3.tmx",
+            "height": 960,
+            "width": 480,
+            "x": 480,
+            "y": -512
+        }
+    ],
+    "onlyShowAdjacentMaps": false,
+    "type": "world"
+}

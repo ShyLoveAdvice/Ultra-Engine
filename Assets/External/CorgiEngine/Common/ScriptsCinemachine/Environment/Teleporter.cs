@@ -75,6 +75,12 @@ namespace MoreMountains.CorgiEngine
 		[Tooltip("the curve to use to fade to black")]
 		public MMTweenType FadeTween = new MMTweenType(MMTween.MMTweenCurve.EaseInCubic);
 
+		[MMCondition("TriggerFade", true)]
+        public MMFaderDirectional.Directions FadeInDirection;
+
+        [MMCondition("TriggerFade", true)]
+        public MMFaderDirectional.Directions FadeOutDirection;
+
 		[MMInspectorGroup("Mask", true, 26)]
 
 		/// whether or not we should ask to move a MMSpriteMask on activation
@@ -337,7 +343,12 @@ namespace MoreMountains.CorgiEngine
 				}    
 			}
 
-			SequenceStartFeedback?.PlayFeedbacks();
+			if(TriggerFade)
+			{
+                MMFaderDirectionEvent.Trigger(FadeInDirection, FadeOutDirection);
+            }
+
+            SequenceStartFeedback?.PlayFeedbacks();
 		}
 
 		/// <summary>
@@ -465,7 +476,7 @@ namespace MoreMountains.CorgiEngine
 
 			if (TriggerFade)
 			{
-				MMFadeOutEvent.Trigger(FadeInDuration, FadeTween, FaderID, false, LevelManager.Instance.Players[0].transform.position);
+                MMFadeOutEvent.Trigger(FadeInDuration, FadeTween, FaderID, false, LevelManager.Instance.Players[0].transform.position);
 			}
 		}
 

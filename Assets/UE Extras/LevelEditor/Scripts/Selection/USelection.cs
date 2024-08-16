@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Ultra.LevelEditor
 {
-    public partial class USelection: SerializedMonoBehaviour
+    public partial class USelection : SerializedMonoBehaviour
     {
         public bool SomethingSelected
         {
@@ -17,9 +17,9 @@ namespace Ultra.LevelEditor
         {
             get
             {
-                if(SelectedLineDict != null)
+                if (SelectedLineDict != null)
                 {
-                    if(SelectedLineDict.Count == 0)
+                    if (SelectedLineDict.Count == 0)
                     {
                         return true;
                     }
@@ -28,14 +28,16 @@ namespace Ultra.LevelEditor
                 return true;
             }
         }
-        public ULevelEditor LevelEditor {  get; private set; }
+        public ULevelEditor LevelEditor { get; private set; }
         public void InitializeSelection(ULevelEditor levelEditor)
         {
             LevelEditor = levelEditor;
 
+            _selectedDataDict = new Dictionary<Vector3Int, USelectData>();
+            _originalSelectedDataDict = new Dictionary<Vector3Int, USelectData>();
+
             ActiveLineDict = new Dictionary<int, int[][]>();
             SelectedLineDict = new Dictionary<int, int[][]>();
-            _selectedTileDatas = new UTileData[0];
             _toBeRemovedIndexes = new int[0];
 
             _shapesPoints = new List<List<Vector2>>();
@@ -60,59 +62,33 @@ namespace Ultra.LevelEditor
         }
         public void ClearSelected()
         {
-            _selectedCellPoses = new Vector3Int[0];
+            PutDownSelectedTiles();
 
             ClearSelectedData();
             ClearDrawnSelected();
 
-            _originalSelectedCellPoses = new Vector3Int[0];
-            _moveOrigin = Vector3Int.zero;
-
-            DrawTiles(_selectedTileDatas);
-            ClearSelectedTileData();
         }
-        public void ClearAndSetSelectedTiles()
+        public void PutDownSelected()
         {
-            _originalSelectedCellPoses = new Vector3Int[0];
             _moveOrigin = Vector3Int.zero;
-
-            DrawTiles(_selectedTileDatas);
-            ClearSelectedTileData();
+            
+            PutDownSelectedTiles();
         }
 
         public void MoveSelected(Vector3Int movedDis)
         {
-            if(SomethingSelected)
+            if (SomethingSelected)
             {
-                _selectedCellPoses = new Vector3Int[_originalSelectedCellPoses.Length];
-                for (int i = 0; i < _selectedCellPoses.Length; i++)
+                _selectedDataDict.Clear();
+                foreach (KeyValuePair<Vector3Int, USelectData> originalSelectData in _originalSelectedDataDict)
                 {
-                    _selectedCellPoses[i] = _originalSelectedCellPoses[i] + movedDis + _moveOrigin;
+                    _selectedDataDict.Add(originalSelectData.Key + movedDis + _moveOrigin, originalSelectData.Value);
                 }
 
-                BuildSelectedData(_selectedCellPoses);
+                SetSelectedLineDataClear(_selectedDataDict.Keys.ToArray());
                 DrawSelected();
 
-                Vector3Int movedPos;
-                for (int i = 0; i < _selectedTileDatas.Length; i++)
-                {
-                    _selectedTileDatasDict.Remove(_selectedTileDatas[i].Pos);
-                    _selectedTileDatas[i] = _originalSelectedTileDatas[i];
-                    movedPos = _originalSelectedTileDatas[i].Pos + movedDis + _moveOrigin;
-                    
-                    _selectedTileDatas[i].Pos = movedPos;
-                    if (!_selectedTileDatasDict.ContainsKey(movedPos))
-                    {
-                        _selectedTileDatasDict.Add(movedPos, _selectedTileDatas[i]);
-                    }
-                    else
-                    {
-                        _selectedTileDatasDict[movedPos] = _selectedTileDatas[i];
-                    }
-                }
-
-                LevelEditor.PreviewLayer.ClearPreviewTiles();
-                LevelEditor.PreviewLayer.DrawPreviewTiles(_selectedTileDatas);
+                MoveSelectedTiles();
             }
         }
         public void MoveSelectedMouseUp(Vector3Int currentDistance)
@@ -122,75 +98,65 @@ namespace Ultra.LevelEditor
 
         public void BuildActive(Vector3Int[] selectedCellPoses)
         {
-            BuildActiveData(selectedCellPoses);
-            DrawActive();
-        }
-        public void BuildActive(Vector3Int selectedBoxMin, Vector3Int selectedBoxMax)
-        {
-            int xMin = selectedBoxMin.x <= selectedBoxMax.x ? selectedBoxMin.x : selectedBoxMax.x;
-            int xMax = xMin == selectedBoxMin.x ? selectedBoxMax.x : selectedBoxMin.x;
-            int yMin = selectedBoxMin.y <= selectedBoxMax.y ? selectedBoxMin.y : selectedBoxMax.y;
-            int yMax = yMin == selectedBoxMin.y ? selectedBoxMax.y : selectedBoxMin.y;
-
-            BuildBoxActiveData(xMin, yMin, xMax, yMax);
+            SetActiveLineDataClear(selectedCellPoses);
             DrawActive();
         }
         public void BuildSelected(Vector3Int[] selectedCellPoses)
         {
-            BuildSelectedData(selectedCellPoses);
-            SaveSelectedData();
-            BuildSelectedTiles(selectedCellPoses);
+            SetSelectedData(selectedCellPoses);
+            PickUpSelectedTiles();
             DrawSelected();
         }
-        public void BuildSelected(Vector3Int[] selectedCellPoses, UTileData[] tileDatas, bool eraseSelectedTiles = true)
+        public void BuildSelected(Vector3Int[] selectedCellPoses, USelectData[] selectDatas)
         {
-            BuildSelectedData(selectedCellPoses);
-            SaveSelectedData();
-            BuildSelectedTiles(selectedCellPoses, tileDatas, eraseSelectedTiles);
+            SetSelectedData(selectedCellPoses, selectDatas);
+            PickUpSelectedTiles(false);
             DrawSelected();
         }
-        public void BuildSelected(Vector3Int selectedBoxMin, Vector3Int selectedBoxMax)
+        public void BuildSelected(Vector3Int[] selectedCellPoses, UTileData[] tileDatas)
         {
-            int xMin = selectedBoxMin.x <= selectedBoxMax.x ? selectedBoxMin.x : selectedBoxMax.x;
-            int xMax = xMin == selectedBoxMin.x ? selectedBoxMax.x : selectedBoxMin.x;
-            int yMin = selectedBoxMin.y <= selectedBoxMax.y ? selectedBoxMin.y : selectedBoxMax.y;
-            int yMax = yMin == selectedBoxMin.y ? selectedBoxMax.y : selectedBoxMin.y;
-
-            BuildBoxSelectedData(xMin, yMin, xMax, yMax);
-            SaveSelectedData();
-            BuildSelectedTiles(_selectedCellPoses);
+            SetSelectedData(selectedCellPoses, tileDatas);
+            PickUpSelectedTiles(false);
             DrawSelected();
         }
-        public void BuildSelectedAdditive(Vector3Int selectedBoxMin, Vector3Int selectedBoxMax)
+        public void BuildSelectedClear(Vector3Int[] selectedCellPoses)
         {
-            Debug.Log($"_selectedCellPoses.Length (Before Additive Select): {_selectedCellPoses.Length}");
-            Vector3Int[] originalSelectedCellPoses = new Vector3Int[_selectedCellPoses.Length];
-            for (int i = 0; i < originalSelectedCellPoses.Length; i++)
-            {
-                originalSelectedCellPoses[i] = _selectedCellPoses[i];
-            }
-
-            int xMin = selectedBoxMin.x <= selectedBoxMax.x ? selectedBoxMin.x : selectedBoxMax.x;
-            int xMax = xMin == selectedBoxMin.x ? selectedBoxMax.x : selectedBoxMin.x;
-            int yMin = selectedBoxMin.y <= selectedBoxMax.y ? selectedBoxMin.y : selectedBoxMax.y;
-            int yMax = yMin == selectedBoxMin.y ? selectedBoxMax.y : selectedBoxMin.y;
-
-            BuildBoxAdditiveSelectedData(xMin, yMin, xMax, yMax);
-            SaveSelectedData();
-            Vector3Int[] selectedCellPosesAdditive = _selectedCellPoses.Except(originalSelectedCellPoses).ToArray();
-            Debug.Log($"_selectedCellPoses.Length: {_selectedCellPoses.Length}");
-            Debug.Log($"selectedCellPosesAdditive.Length: {selectedCellPosesAdditive.Length}");
-            for (int i = 0; i < selectedCellPosesAdditive.Length; i++)
-            {
-                Debug.Log(selectedCellPosesAdditive[i]);
-            }
-            BuildSelectedTilesAdditive(selectedCellPosesAdditive);
+            SetSelectedDataClear(selectedCellPoses);
+            PickUpSelectedTiles();
             DrawSelected();
         }
 
         public void RebuildSelected()
         {
-            BuildSelected(_selectedCellPoses);
+            PutDownSelected();
+            BuildSelectedClear(_selectedDataDict.Keys.ToArray());
+        }
+
+        public void DeleteSelectedTiles()
+        {
+            Vector3Int[] selectedPoses = _selectedDataDict.Keys.ToArray();
+            for (int i = 0; i < selectedPoses.Length; i++)
+            {
+                if (_selectedDataDict[selectedPoses[i]].TileData.Initialized)
+                {
+                    _selectedDataDict[selectedPoses[i]] = new USelectData(new UTileData());
+                }
+            }
+            SetOriginalSelectedDataClear();
+            RebuildSelected();
+        }
+        public void DeleteSelected()
+        {
+            PickUpSelectedTiles();
+            Vector3Int[] selectedPoses = _selectedDataDict.Keys.ToArray();
+            for (int i = 0; i < selectedPoses.Length; i++)
+            {
+                if (_selectedDataDict[selectedPoses[i]].TileData.Initialized)
+                {
+                    _selectedDataDict[selectedPoses[i]] = new USelectData(new UTileData());
+                }
+            }
+            ClearSelected();
         }
 
         public bool Contains(Vector3Int cellPos)
@@ -201,11 +167,6 @@ namespace Ultra.LevelEditor
         public Vector3Int[] GetSelectedTiles()
         {
             var selectedTiles = LevelEditor.CurrentLayer.GetTilePoses(GetSelectedCells());
-            return selectedTiles;
-        }
-        public Vector3Int[] GetSelectedPreviewTiles()
-        {
-            var selectedTiles = LevelEditor.CurrentLayer.GetPreviewTilePoses(GetSelectedCells());
             return selectedTiles;
         }
         public Vector3Int[] GetSelectedCells()
@@ -229,45 +190,22 @@ namespace Ultra.LevelEditor
         }
         public UTileData[] GetSelectedTileDatas()
         {
-            var selectedTileDatas = LevelEditor.CurrentLayer.GetTileDatas(GetSelectedCells());
-            return selectedTileDatas;
-        }
-
-        private void BuildSelectedTiles(Vector3Int[] selectedCellPoses, UTileData[] tileDatas = null, bool eraseSelectedTiles = true)
-        {
-            if (tileDatas == null)
+            UTileData[] result = new UTileData[_selectedDataDict.Count];
+            int index = 0;
+            foreach (var selectedData in _selectedDataDict)
             {
-                BuildSelectedTileData(selectedCellPoses);
+                result[index] = selectedData.Value.TileData;
+                index++;
             }
-            else
-            {
-                BuildSelectedTileData(tileDatas);
-            }
-            LevelEditor.PreviewLayer.DrawPreviewTiles(_selectedTileDatas);
-
-            if(eraseSelectedTiles)
-            {
-                LevelEditor.CurrentLayer.EraseTiles(_selectedTileDatas);
-            }
-        }
-        private void BuildSelectedTilesAdditive(Vector3Int[] selectedCellPosesAdditive)
-        {
-            BuildSelectedTileDataAdditive(selectedCellPosesAdditive);
-            LevelEditor.PreviewLayer.DrawPreviewTiles(_selectedTileDatas);
-            LevelEditor.CurrentLayer.EraseTiles(selectedCellPosesAdditive);
-        }
-        private void SaveSelectedData()
-        {
-            _originalSelectedCellPoses = GetSelectedCells();
-            _selectedCellPoses = _originalSelectedCellPoses;
+            return result;
         }
         private bool IsInSelection(int cellX, int cellY, Dictionary<int, int[][]> selectionLineDict)
         {
-            if(selectionLineDict.ContainsKey(cellY))
+            if (selectionLineDict.ContainsKey(cellY))
             {
-                for(int i = 0; i < selectionLineDict[cellY].Length; i++)
+                for (int i = 0; i < selectionLineDict[cellY].Length; i++)
                 {
-                    if(cellX >= selectionLineDict[cellY][i][LINEXMIN] && cellX <= selectionLineDict[cellY][i][LINEXMAX])
+                    if (cellX >= selectionLineDict[cellY][i][LINEXMIN] && cellX <= selectionLineDict[cellY][i][LINEXMAX])
                     {
                         return true;
                     }

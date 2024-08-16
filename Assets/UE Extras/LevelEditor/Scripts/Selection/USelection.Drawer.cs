@@ -71,10 +71,6 @@ namespace Ultra.LevelEditor
             }
         }
 
-        private void DrawBoxActive()
-        {
-
-        }
         private void DrawActive()
         {
             DrawSelection(ActiveSelectionPrefab, ref _drawnActiveLR, ActiveLineDict);
@@ -90,10 +86,24 @@ namespace Ultra.LevelEditor
             }
         }
 
-        private void DrawTiles(UTileData[] selectedTiles)
+        private void PickUpSelectedTiles(bool eraseSelectedTiles = true)
+        {
+            LevelEditor.PreviewLayer.DrawPreviewTiles(_selectedDataDict.Keys.ToArray(), GetSelectedTileDatas());
+
+            if (eraseSelectedTiles)
+            {
+                LevelEditor.CurrentLayer.EraseTiles(_selectedDataDict.Keys.ToArray());
+            }
+        }
+        private void MoveSelectedTiles()
         {
             LevelEditor.PreviewLayer.ClearPreviewTiles();
-            LevelEditor.CurrentLayer.DrawTiles(selectedTiles);
+            LevelEditor.PreviewLayer.DrawPreviewTiles(_selectedDataDict.Keys.ToArray(), GetSelectedTileDatas());
+        }
+        private void PutDownSelectedTiles()
+        {
+            LevelEditor.PreviewLayer.ClearPreviewTiles();
+            LevelEditor.CurrentLayer.DrawTiles(_selectedDataDict.Keys.ToArray(), GetSelectedTileDatas());
         }
 
         private void SaveDrawnSelectedPoints()

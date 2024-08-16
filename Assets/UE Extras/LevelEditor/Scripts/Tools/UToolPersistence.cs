@@ -35,8 +35,6 @@ namespace Ultra.LevelEditor
             LastCellPos = CurrentMouseCellPos;
         }
         private Vector3Int[] _selectedCells;
-        private Vector3Int[] _selectedTiles;
-        private TileBase[] _selectedTileBases;
         private UTileData[] _selectedTileDatas;
         protected virtual void CtrlCEvent()
         {
@@ -52,6 +50,7 @@ namespace Ultra.LevelEditor
 
             if (_selectedCells != null && _selectedTileDatas != null)
             {
+                LevelEditor.Selection.ClearSelected();
                 LevelEditor.Selection.BuildSelected(_selectedCells, _selectedTileDatas);
             }
         }

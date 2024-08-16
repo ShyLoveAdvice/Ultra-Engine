@@ -42,7 +42,7 @@ namespace Ultra.LevelEditor
         {
             base.OnSelected();
 
-            if(Selection != null)
+            if (Selection != null)
             {
                 Selection.RebuildSelected();
             }
@@ -51,9 +51,9 @@ namespace Ultra.LevelEditor
         {
             base.UnSelected();
 
-            if(Selection != null)
+            if (Selection != null)
             {
-                Selection.ClearAndSetSelectedTiles();
+                Selection.PutDownSelected();
             }
         }
         protected override void BeforeMouseEvents()
@@ -75,7 +75,6 @@ namespace Ultra.LevelEditor
                 if (Selection.NothingSelected || !Selection.Contains(CurrentMouseCellPos))
                 {
                     BoxSelectState = SelectStates.New;
-                    Debug.Log("NothingSelected: " + Selection.NothingSelected);
                 }
                 else if (CanMove)
                 {
@@ -93,7 +92,7 @@ namespace Ultra.LevelEditor
             {
                 if (CurrentMouseCellPos != LastCellPos || CurrentMouseCellPos == _startCellPos)
                 {
-                    Selection.BuildActive(new Vector3Int(_startCellPos.x, _startCellPos.y), new Vector3Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
+                    Selection.BuildActive(UShapeGetter.GetBox(_startCellPos, CurrentMouseCellPos));
                 }
             }
             if (BoxSelectState == SelectStates.Move)
@@ -115,13 +114,13 @@ namespace Ultra.LevelEditor
 
                 if (CurrentMouseCellPos != _startCellPos)
                 {
-                    Selection.BuildSelected(new Vector3Int(_startCellPos.x, _startCellPos.y), new Vector3Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
+                    Selection.BuildSelected(UShapeGetter.GetBox(_startCellPos, CurrentMouseCellPos));
                 }
             }
             if (BoxSelectState == SelectStates.Additive)
             {
                 Selection.ClearActive();
-                Selection.BuildSelectedAdditive(new Vector3Int(_startCellPos.x, _startCellPos.y), new Vector3Int(CurrentMouseCellPos.x, CurrentMouseCellPos.y));
+                Selection.BuildSelected(UShapeGetter.GetBox(_startCellPos, CurrentMouseCellPos));
             }
             if (BoxSelectState == SelectStates.Move)
             {
@@ -133,13 +132,26 @@ namespace Ultra.LevelEditor
         {
             if (BoxSelectState == SelectStates.None)
             {
-                if (Input.GetKey(KeyCode.LeftControl))
+                if (InputManager.CurrentInput == LevelEditorInputs.CtrlD)
                 {
-                    if (Input.GetKeyDown(KeyCode.D))
+                    Selection.ClearSelected();
+                }
+
+                if(ToolSelected)
+                {
+                    if (InputManager.CurrentInput == LevelEditorInputs.Delete)
                     {
-                        Selection.ClearSelected();
+                        Selection.DeleteSelectedTiles();
                     }
                 }
+                else
+                {
+                    if (InputManager.CurrentInput == LevelEditorInputs.Delete)
+                    {
+                        Selection.DeleteSelected();
+                    }
+                }
+                
             }
         }
     }

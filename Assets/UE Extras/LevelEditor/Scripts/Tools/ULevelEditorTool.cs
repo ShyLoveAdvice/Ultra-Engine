@@ -25,6 +25,7 @@ namespace Ultra.LevelEditor
             }
         }
         private bool ToolStarted;
+        protected bool ToolSelected;
         public ULevelEditorTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType)
         {
             LevelEditor = levelEditor;
@@ -43,6 +44,7 @@ namespace Ultra.LevelEditor
             if(toolType == ToolType)
             {
                 OnSelected();
+                ToolSelected = true;
             }
         }
         protected virtual void OnSelected() { }
@@ -51,6 +53,7 @@ namespace Ultra.LevelEditor
             if(toolType == ToolType)
             {
                 UnSelected();
+                ToolSelected = false;
             }
         }
 

@@ -1,0 +1,75 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "Maps/prototype_tilemap.tmx",
+    "automapping.whileDrawing": false,
+    "expandedProjectPaths": [
+        "Maps",
+        ".",
+        "Maps/Rules",
+        "Tilesets"
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        ":/automap-tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Maps/Rules/autotile_rules.tmx": {
+            "scale": 4,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 352.875,
+                "y": 171.125
+            }
+        },
+        "Maps/Tilesets/Prototype Tileset.tsx": {
+            "scaleInDock": 1
+        },
+        "Maps/autotile_map.tmx": {
+            "scale": 8,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 79.4375,
+                "y": 58.5625
+            }
+        },
+        "Maps/prototype_tilemap.tmx": {
+            "scale": 2,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 263.25,
+                "y": 183.75
+            }
+        },
+        "Tilesets/Prototype Tileset.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 8
+        }
+    },
+    "last.externalTilesetPath": "C:/Users/parop/OneDrive/Documents/Tiled Projects/ProtoType Project/Tilesets",
+    "last.imagePath": "C:/Users/parop/OneDrive/Desktop/Art Stuff/Tilesets",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "openFiles": [
+        "Maps/prototype_tilemap.tmx",
+        "Tilesets/Prototype Tileset.tsx",
+        "Maps/Rules/autotile_rules.tmx"
+    ],
+    "project": "Prototype.tiled-project",
+    "recentFiles": [
+        "Maps/Rules/autotile_rules.tmx",
+        "Tilesets/Prototype Tileset.tsx",
+        "Maps/prototype_tilemap.tmx",
+        ":/automap-tiles.tsx",
+        "Maps/autotile_map.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

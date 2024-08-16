@@ -23,6 +23,9 @@ namespace Ultra.LevelEditor
     }
     public class ULevelEditorGridDrawer
     {
+        public int GridXStart { get => _gridXStart; }
+        public int GridYStart { get => _gridYStart; }
+
         private string _lineSortingLayerName;
         private float _cellSize;
         private float _lineWidth;
@@ -53,14 +56,11 @@ namespace Ultra.LevelEditor
             _lineWidth = levelEditor.GridDrawerData.LineWidth;
             _axisWidth = levelEditor.GridDrawerData.AxisWidth;
 
-            bool isXEven = _levelSize.x % 2 == 0;
-            bool isYEven = _levelSize.y % 2 == 0;
+            _gridXStart = levelEditor.LevelStartPos.x;
+            _gridYStart = levelEditor.LevelStartPos.y;
 
-            _gridXStart = isXEven ? -(_levelSize.x / 2) : -((_levelSize.x + 1) / 2);
-            _gridYStart = isYEven ? -(_levelSize.y / 2) : -((_levelSize.y + 1) / 2);
-
-            _gridXEnd = _gridXStart + _levelSize.x;
-            _gridYEnd = _gridYStart + _levelSize.y;
+            _gridXEnd = levelEditor.LevelEndPos.x;
+            _gridYEnd = levelEditor.LevelEndPos.y;
 
             EditorGridsParent = new GameObject("Editor Grids");
             lineMaterial = AssetDatabase.LoadAssetAtPath<Material>(LineMatPath);

@@ -242,4 +242,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/UE Extras/CorgiEngine Extra/Scenes/GamePlayScenes/GamePlayScene1.unity
     guid: 9240d10f46fcbef4788bfac8addc19f0
+  - enabled: 1
+    path: Assets/UE Extras/Shootavania Game/Scenes/GamePlay Room Test.unity
+    guid: f6cd8591d2189e348b1b5449c882c17d
   m_configObjects: {}

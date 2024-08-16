@@ -1,26 +1,37 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UnityEngine.UIElements;
 
 namespace Ultra.LevelEditor
 {
     [Serializable]
     public struct UTileData
     {
-        public Vector3Int Pos;
+        public bool Initialized;
         public TileBase TileBase;
-        public UTileData(bool emptyTileData = true)
+        public UTileData(TileBase tileBase, bool initialized = true)
         {
-            Pos = new Vector3Int(int.MinValue, int.MinValue);
-            TileBase = null;
-        }
-        public UTileData(Vector3Int pos, TileBase tileBase)
-        {
-            this.Pos = pos;
+            Initialized = initialized;
             this.TileBase = tileBase;
+        }
+        public static bool operator == (UTileData a, UTileData b)
+        {
+            return a.TileBase == b.TileBase;
+        }
+        public static bool operator !=(UTileData a, UTileData b)
+        {
+            return a.TileBase != b.TileBase;
+        }
+    }
+
+    public struct UTileDataSave
+    {
+        public Vector3Int WorldPos;
+        public TileBase TileBase;
+        public UTileDataSave(Vector3Int worldPos, TileBase tileBase)
+        {
+            WorldPos = worldPos;
+            TileBase = tileBase;
         }
     }
 }

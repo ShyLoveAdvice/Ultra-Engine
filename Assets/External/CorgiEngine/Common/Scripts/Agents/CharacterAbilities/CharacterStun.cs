@@ -53,6 +53,7 @@ namespace MoreMountains.CorgiEngine
 		/// <param name="duration"></param>
 		public virtual void StunFor(float duration)
 		{
+			Debug.Log(duration);
 			_stunCoroutine = StartCoroutine(StunCoroutine(duration));
 		}
 

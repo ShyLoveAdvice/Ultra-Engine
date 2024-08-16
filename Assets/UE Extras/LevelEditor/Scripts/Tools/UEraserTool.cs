@@ -37,7 +37,7 @@ namespace Ultra.LevelEditor
                 if (Selection.NothingSelected || Selection.Contains(tilePos))
                 {
                     _toBeErasedTiles.Add(tilePos);
-                    LevelEditor.CurrentLayer.EraseTilePreview(tilePos);
+                    LevelEditor.CurrentLayer.EraseTile(tilePos);
                 }
             }
         }

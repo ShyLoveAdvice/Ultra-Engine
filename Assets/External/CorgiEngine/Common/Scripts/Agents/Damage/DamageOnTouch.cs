@@ -17,7 +17,7 @@ namespace MoreMountains.CorgiEngine
 		/// the possible ways to add knockback : noKnockback, which won't do nothing, set force, or add force
 		public enum KnockbackStyles { NoKnockback, SetForce, AddForce }
 		/// the possible knockback directions when causing damage
-		public enum CausedKnockbackDirections { BasedOnOwnerPosition, BasedOnSpeed, BasedOnDamageOnTouchPosition }
+		public enum CausedKnockbackDirections { XBasedOnOwnerPosition, XBasedOnSpeed, XBasedOnDamageOnTouchPosition, BasedOnOwnerTransformUp, BasedOnSelfRotation, BasedOnProjectileDirection, BasedOnDamageOnTouchPosition }
 		/// the possible knockback directions when taking damage
 		public enum TakenKnockbackDirections { BasedOnDamagerPosition, BasedOnSpeed, BasedOnDamageOnTouchPosition }
 
@@ -52,7 +52,7 @@ namespace MoreMountains.CorgiEngine
 		public KnockbackStyles DamageCausedKnockbackType = KnockbackStyles.SetForce;
 		/// The direction to apply the knockback in 
 		[Tooltip("The direction to apply the knockback in")]
-		public CausedKnockbackDirections DamageCausedKnockbackDirection = CausedKnockbackDirections.BasedOnOwnerPosition;
+		public CausedKnockbackDirections DamageCausedKnockbackDirection = CausedKnockbackDirections.XBasedOnOwnerPosition;
 		/// The force to apply to the object that gets damaged
 		[Tooltip("The force to apply to the object that gets damaged")]
 		public Vector2 DamageCausedKnockbackForce = new Vector2(10,2);
@@ -381,27 +381,45 @@ namespace MoreMountains.CorgiEngine
 			}
 			
 			_knockbackForce.x = DamageCausedKnockbackForce.x;
-			switch (DamageCausedKnockbackDirection)
+            _knockbackForce.y = DamageCausedKnockbackForce.y;
+            if (Owner == null) { Owner = this.gameObject; }
+
+            switch (DamageCausedKnockbackDirection)
 			{
-				case CausedKnockbackDirections.BasedOnOwnerPosition:
-					if (Owner == null) { Owner = this.gameObject; }
+				case CausedKnockbackDirections.XBasedOnOwnerPosition:
 					Vector2 relativePosition = _colliderCorgiController.transform.position - Owner.transform.position;
 					_knockbackForce.x *= Mathf.Sign(relativePosition.x);
 					break;
-				case CausedKnockbackDirections.BasedOnSpeed:
+				case CausedKnockbackDirections.XBasedOnSpeed:
 					Vector2 totalVelocity = _colliderCorgiController.Speed + _velocity;
 					_knockbackForce.x *= -1 * Mathf.Sign(totalVelocity.x);
 					break;
-				case CausedKnockbackDirections.BasedOnDamageOnTouchPosition:
+				case CausedKnockbackDirections.XBasedOnDamageOnTouchPosition:
 					Vector3 _colliderOffset =
 						(_boxCollider2D != null) ? _boxCollider2D.offset : _circleCollider2D.offset;
 					_knockbackForce.x *= Mathf.Sign((_colliderCorgiController.transform.position - (this.gameObject.transform.position + _colliderOffset)).x);
 					break;
-			}
-			
-			_knockbackForce.y = DamageCausedKnockbackForce.y;
+				case CausedKnockbackDirections.BasedOnOwnerTransformUp:
+                    _knockbackForce = (Owner.transform.right * DamageCausedKnockbackForce.x) + (Owner.transform.up * DamageCausedKnockbackForce.y);
+                    break;
+				case CausedKnockbackDirections.BasedOnSelfRotation:
+                    _knockbackForce = transform.rotation * Vector3.right * DamageCausedKnockbackForce.x;
+                    break;
+				case CausedKnockbackDirections.BasedOnProjectileDirection:
+                    Projectile projectile = GetComponent<Projectile>();
+                    if (projectile != null)
+                    {
+                        _knockbackForce = projectile.Direction * DamageCausedKnockbackForce.x;
+                    }
+					break;
+				case CausedKnockbackDirections.BasedOnDamageOnTouchPosition:
+                    Vector3 _colliderOffset2 =
+                        (_boxCollider2D != null) ? _boxCollider2D.offset : _circleCollider2D.offset;
+                    _knockbackForce = (_colliderCorgiController.transform.position - (this.gameObject.transform.position + _colliderOffset2)).normalized * DamageCausedKnockbackForce.x;
+					break;
+            }
 
-			_knockbackForce = _colliderHealth.ComputeKnockbackForce(_knockbackForce, typedDamages);
+            _knockbackForce = _colliderHealth.ComputeKnockbackForce(_knockbackForce, typedDamages);
 			
 			switch (DamageCausedKnockbackType)
 			{

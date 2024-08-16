@@ -6,13 +6,29 @@ using MoreMountains.Tools;
 
 namespace MoreMountains.Tools
 {
-	/// <summary>
-	/// The Fader class can be put on an Image, and it'll intercept MMFadeEvents and turn itself on or off accordingly.
-	/// This specific fader will move from left to right, right to left, top to bottom or bottom to top
-	/// </summary>
-	[RequireComponent(typeof(CanvasGroup))]
+    public struct MMFaderDirectionEvent
+    {
+		public MMFaderDirectional.Directions FadeInDir;
+        public MMFaderDirectional.Directions FadeOutDir;
+
+        public MMFaderDirectionEvent(MMFaderDirectional.Directions fadeInDir, MMFaderDirectional.Directions fadeOutDir)
+        {
+            FadeInDir = fadeInDir; FadeOutDir = fadeOutDir;
+        }
+        static MMFaderDirectionEvent e;
+        public static void Trigger(MMFaderDirectional.Directions fadeInDir, MMFaderDirectional.Directions fadeOutDir)
+        {
+			e.FadeInDir = fadeInDir; e.FadeOutDir = fadeOutDir;
+			MMEventManager.TriggerEvent(e);
+        }
+    }
+    /// <summary>
+    /// The Fader class can be put on an Image, and it'll intercept MMFadeEvents and turn itself on or off accordingly.
+    /// This specific fader will move from left to right, right to left, top to bottom or bottom to top
+    /// </summary>
+    [RequireComponent(typeof(CanvasGroup))]
 	[AddComponentMenu("More Mountains/Tools/GUI/MMFaderDirectional")]
-	public class MMFaderDirectional : MonoBehaviour, MMEventListener<MMFadeEvent>, MMEventListener<MMFadeInEvent>, MMEventListener<MMFadeOutEvent>, MMEventListener<MMFadeStopEvent>
+	public class MMFaderDirectional : MonoBehaviour, MMEventListener<MMFadeEvent>, MMEventListener<MMFadeInEvent>, MMEventListener<MMFadeOutEvent>, MMEventListener<MMFadeStopEvent>, MMEventListener<MMFaderDirectionEvent>
 	{
 		/// the possible directions this fader can move in
 		public enum Directions { TopToBottom, LeftToRight, RightToLeft, BottomToTop }
@@ -347,17 +363,24 @@ namespace MoreMountains.Tools
 				}
 			}
 		}
+        public void OnMMEvent(MMFaderDirectionEvent faderDirectionEvent)
+        {
+			FadeInDirection = faderDirectionEvent.FadeInDir;
+			FadeOutDirection = faderDirectionEvent.FadeOutDir;
+			DisableFader();
+        }
 
-		/// <summary>
-		/// On enable, we start listening to events
-		/// </summary>
-		protected virtual void OnEnable()
+        /// <summary>
+        /// On enable, we start listening to events
+        /// </summary>
+        protected virtual void OnEnable()
 		{
 			this.MMEventStartListening<MMFadeEvent>();
 			this.MMEventStartListening<MMFadeStopEvent>();
 			this.MMEventStartListening<MMFadeInEvent>();
 			this.MMEventStartListening<MMFadeOutEvent>();
-		}
+			this.MMEventStartListening<MMFaderDirectionEvent>();
+        }
 
 		/// <summary>
 		/// On disable, we stop listening to events
@@ -368,6 +391,9 @@ namespace MoreMountains.Tools
 			this.MMEventStopListening<MMFadeStopEvent>();
 			this.MMEventStopListening<MMFadeInEvent>();
 			this.MMEventStopListening<MMFadeOutEvent>();
-		}
-	}
+            this.MMEventStopListening<MMFaderDirectionEvent>();
+        }
+
+
+    }
 }

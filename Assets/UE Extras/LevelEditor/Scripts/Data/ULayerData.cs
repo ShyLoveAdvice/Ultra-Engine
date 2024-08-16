@@ -15,6 +15,12 @@ namespace Ultra.LevelEditor
     {
 	    public LayerTypes LayerType;
         public float CellSize;
-        public UTileData[] Tiles;
+        public UTileDataSave[] Tiles;
+        public ULayerData(LayerTypes layerType, float cellSize, UTileDataSave[] tileDatas)
+        {
+            this.LayerType = layerType;
+            this.CellSize = cellSize;
+            this.Tiles = tileDatas;
+        }
     }
 }

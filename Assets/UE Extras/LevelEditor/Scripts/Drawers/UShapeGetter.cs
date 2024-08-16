@@ -117,6 +117,35 @@ namespace Ultra.LevelEditor
 
             return BRESLine(x1, y1, x2, y2, dx, dy, m);
         }
+        public static Vector3Int[] GetBox(Vector3Int boxStartCell, Vector3Int boxEndCell)
+        {
+            int xMin, xMax, yMin, yMax, boxCellSize, index;
+            xMin = boxStartCell.x; yMin = boxStartCell.y;
+            xMax = boxEndCell.x; yMax = boxEndCell.y;
+
+            if(xMin > xMax)
+            {
+                xMin = xMax; xMax = boxStartCell.x;
+            }
+            if(yMin > yMax)
+            {
+                yMin = yMax; yMax = boxStartCell.y;
+            }
+
+            boxCellSize = (xMax - xMin + 1) * (yMax - yMin + 1);
+            Vector3Int[] result = new Vector3Int[boxCellSize];
+            index = 0;
+            for (int y = yMin; y <= yMax; y++)
+            {
+                for (int x = xMin; x <= xMax; x++)
+                {
+                    result[index] = new Vector3Int(x, y);
+                    index++;
+                }
+            }
+            return result;
+            
+        }
         public static Vector3Int[] GetCircleByDiameter(Vector3Int circleEdge1, Vector3Int circleEdge2)
         {
             Vector2Int circleCenter = new Vector2Int(Mathf.RoundToInt((circleEdge1.x + circleEdge2.x) / 2), Mathf.RoundToInt((circleEdge1.y + circleEdge2.y) / 2));

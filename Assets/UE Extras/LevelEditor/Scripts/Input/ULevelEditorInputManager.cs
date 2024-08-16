@@ -23,7 +23,8 @@ namespace Ultra.LevelEditor
         None,
         CtrlC,
         CtrlV,
-        CtrlD
+        CtrlD,
+        Delete
     }
     public class ULevelEditorInputManager : MMSingleton<ULevelEditorInputManager>
     {
@@ -112,6 +113,11 @@ namespace Ultra.LevelEditor
                 {
                     _currentInput = LevelEditorInputs.CtrlD;
                 }
+            }
+
+            if(Input.GetKeyDown (KeyCode.Delete))
+            {
+                _currentInput = LevelEditorInputs.Delete;
             }
 
             if (_isMosueOverUI)

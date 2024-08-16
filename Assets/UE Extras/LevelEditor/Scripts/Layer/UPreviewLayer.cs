@@ -36,11 +36,11 @@ namespace Ultra.LevelEditor
         {
             PreviewTileMap.SetTiles(poses, tileBases);
         }
-        public void DrawPreviewTiles(UTileData[] tileDatas)
+        public void DrawPreviewTiles(Vector3Int[] poses, UTileData[] tileDatas)
         {
             for (int i = 0; i < tileDatas.Length; i++)
             {
-                PreviewTileMap.SetTile(tileDatas[i].Pos, tileDatas[i].TileBase);
+                PreviewTileMap.SetTile(poses[i], tileDatas[i].TileBase);
             }
         }
 
