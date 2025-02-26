@@ -86,7 +86,7 @@ namespace Ultra.LevelEditor
                 }
 
                 SetSelectedLineDataClear(_selectedDataDict.Keys.ToArray());
-                DrawSelected();
+                DrawSelectedPeripheral();
 
                 MoveSelectedTiles();
             }
@@ -105,30 +105,30 @@ namespace Ultra.LevelEditor
         {
             SetSelectedData(selectedCellPoses);
             PickUpSelectedTiles();
-            DrawSelected();
+            DrawSelectedPeripheral();
         }
         public void BuildSelected(Vector3Int[] selectedCellPoses, USelectData[] selectDatas)
         {
             SetSelectedData(selectedCellPoses, selectDatas);
             PickUpSelectedTiles(false);
-            DrawSelected();
+            DrawSelectedPeripheral();
         }
         public void BuildSelected(Vector3Int[] selectedCellPoses, UTileData[] tileDatas)
         {
             SetSelectedData(selectedCellPoses, tileDatas);
             PickUpSelectedTiles(false);
-            DrawSelected();
+            DrawSelectedPeripheral();
         }
         public void BuildSelectedClear(Vector3Int[] selectedCellPoses)
         {
             SetSelectedDataClear(selectedCellPoses);
             PickUpSelectedTiles();
-            DrawSelected();
+            DrawSelectedPeripheral();
         }
 
         public void RebuildSelected()
         {
-            PutDownSelected();
+            //PutDownSelected();
             BuildSelectedClear(_selectedDataDict.Keys.ToArray());
         }
 
@@ -164,7 +164,7 @@ namespace Ultra.LevelEditor
             return IsInSelection(cellPos.x, cellPos.y, SelectedLineDict);
         }
 
-        public Vector3Int[] GetSelectedTiles()
+        public Vector3Int[] GetSelectedTilePoses()
         {
             var selectedTiles = LevelEditor.CurrentLayer.GetTilePoses(GetSelectedCells());
             return selectedTiles;
@@ -199,6 +199,7 @@ namespace Ultra.LevelEditor
             }
             return result;
         }
+        
         private bool IsInSelection(int cellX, int cellY, Dictionary<int, int[][]> selectionLineDict)
         {
             if (selectionLineDict.ContainsKey(cellY))

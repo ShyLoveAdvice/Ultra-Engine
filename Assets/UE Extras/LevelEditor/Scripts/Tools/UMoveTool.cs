@@ -37,7 +37,7 @@ namespace Ultra.LevelEditor
             {
                 _startMovingCellPos = CurrentMouseCellPos;
                 _lastMovedDistance = Vector3Int.zero;
-                _originalSelectedTilesPoses = Selection.GetSelectedTiles();
+                _originalSelectedTilesPoses = Selection.GetSelectedTilePoses();
                 _lastMovedTilePoses = _originalSelectedTilesPoses;
                 _moveStarted = true;
             }

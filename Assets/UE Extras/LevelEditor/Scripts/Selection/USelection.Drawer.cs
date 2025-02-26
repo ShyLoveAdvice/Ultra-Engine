@@ -75,7 +75,11 @@ namespace Ultra.LevelEditor
         {
             DrawSelection(ActiveSelectionPrefab, ref _drawnActiveLR, ActiveLineDict);
         }
-        private void DrawSelected(bool setScaleDraggers = true)
+        /// <summary>
+        /// Draws selection ant lines and scale draggers
+        /// </summary>
+        /// <param name="setScaleDraggers"></param>
+        private void DrawSelectedPeripheral(bool setScaleDraggers = true)
         {
             DrawSelection(selectedSelectionPrefab, ref _drawnSelectedLRs, SelectedLineDict);
 

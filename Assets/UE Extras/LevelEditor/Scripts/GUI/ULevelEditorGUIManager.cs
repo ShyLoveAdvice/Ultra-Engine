@@ -140,6 +140,24 @@ namespace Ultra.LevelEditor
                 }
             }
         }
+        public void UpdateSelectButton(ULevelEditorToolTypes toolType)
+        {
+            foreach (USelectButton b in _selectButtons)
+            {
+                UToolSelectButton uToolSelectButton = b as UToolSelectButton;
+                if (uToolSelectButton != null)
+                {
+                    if (uToolSelectButton.ButtonToolType == toolType)
+                    {
+                        b.Select();
+                    }
+                    else
+                    {
+                        b.UnSelect();
+                    }
+                }
+            }
+        }
         #endregion
     }
 }

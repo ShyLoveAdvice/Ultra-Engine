@@ -11,7 +11,7 @@ namespace Ultra.LevelEditor
 {
     public enum ULevelEditorToolTypes
     {
-        None, Brush, BoxSelect, Move, Eraser, Line, Circle, CircleSelect, Bucket, MagicWand
+        None, Brush, BoxSelect, Move, Eraser, Line, Circle, CircleSelect, Bucket, MagicWand, PrefabPlace
     }
     public class ULevelEditor : MMSingleton<ULevelEditor>
     {

@@ -16,6 +16,7 @@ namespace Ultra.LevelEditor
         public SelectStates BoxSelectState { get; private set; }
 
         protected Vector3Int _startCellPos;
+        protected Vector3Int _endCellPos;
         protected Vector3Int _lastCellPos;
 
         private bool CanMove
