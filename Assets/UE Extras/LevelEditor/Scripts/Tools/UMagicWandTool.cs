@@ -6,10 +6,6 @@ namespace Ultra.LevelEditor
 {
     public class UMagicWandTool: ULevelEditorTool
     {
-        public UMagicWandTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
-        {
-        }
-
         protected override void OnMouseLeftButtonDown()
         {
             if(!Selection.Contains(CurrentMouseCellPos))

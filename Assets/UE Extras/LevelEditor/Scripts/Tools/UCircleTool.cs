@@ -10,9 +10,6 @@ namespace Ultra.LevelEditor
         protected Vector3Int _ellipseCenter;
         protected Vector3Int[] _circleCellPoses = new Vector3Int[0];
         protected List<Vector3Int> _toBeDrawnCellPoses = new List<Vector3Int>();
-        public UCircleTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
-        {
-        }
         protected override void OnMouseLeftButtonDown()
         {
             _toBeDrawnCellPoses.Clear();
@@ -29,7 +26,7 @@ namespace Ultra.LevelEditor
                 {
                     if (CanDrawTile(_circleCellPoses[i]))
                     {
-                        LevelEditor.PreviewLayer.DrawPreviewTile(_circleCellPoses[i], LevelEditor.CurrentTileBase);
+                        LevelEditor.PreviewLayer.DrawPreviewTile(_circleCellPoses[i], LevelEditor.CurrentTile);
                     }
                 }
             }
@@ -38,7 +35,7 @@ namespace Ultra.LevelEditor
         {
             DetermineFinalToBeDrawnTiles();
             LevelEditor.PreviewLayer.ClearPreviewTiles();
-            LevelEditor.CurrentLayer.DrawTiles(_toBeDrawnCellPoses.ToArray(), LevelEditor.CurrentTileBase);
+            LevelEditor.CurrentLayer.DrawTiles(_toBeDrawnCellPoses.ToArray(), LevelEditor.CurrentTile);
         }
         protected void DetermineFinalToBeDrawnTiles()
         {

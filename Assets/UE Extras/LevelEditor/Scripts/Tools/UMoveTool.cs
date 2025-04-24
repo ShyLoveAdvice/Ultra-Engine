@@ -27,10 +27,6 @@ namespace Ultra.LevelEditor
         private Vector3Int[] _movingTilePoses;
         private Vector3Int[] _lastMovedTilePoses;
 
-        public UMoveTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
-        {
-            
-        }
         protected override void OnMouseLeftButtonDown()
         {
             if(CanMove)

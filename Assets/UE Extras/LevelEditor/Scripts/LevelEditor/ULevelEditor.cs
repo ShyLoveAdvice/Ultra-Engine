@@ -6,6 +6,8 @@ using MoreMountains.Tools;
 using UnityEngine.Tilemaps;
 using System;
 using Sirenix.OdinInspector;
+using Sirenix.Utilities;
+using UnityEngine.Serialization;
 
 namespace Ultra.LevelEditor
 {
@@ -19,21 +21,12 @@ namespace Ultra.LevelEditor
         public ULevelLayer CurrentLayer;
 
         [ReadOnly] public ULevelEditorToolTypes CurrentTool;
-
-        [Header("BoxSelectTool")]
-        public GameObject ActiveBox;
-        public GameObject SelectedBox;
-        protected UToolPersistence ToolPersistence { get; private set; }
+        public Action ToolPersistenceEvent;
+        
+        private ULevelEditorTool[] _tools;
         protected UBrushTool BrushTool { get; private set; }
         public UBoxSelectTool BoxSelectTool { get; private set; }
         public USelection Selection {  get; private set; }
-        protected UMoveTool MoveTool { get; private set; }
-        protected UEraserTool EraserTool { get; private set;}
-        protected ULineTool LineTool { get; private set; }
-        protected UCircleTool CircleTool { get; private set; }
-        protected UCircleSelectTool CircleSelectTool { get; private set; }
-        protected UBucketTool BucketTool { get; private set; }
-        protected UMagicWandTool MagicWandTool { get; private set; }
         [Header("Level Data")]
         public string LevelName;
         [TextArea]
@@ -57,7 +50,8 @@ namespace Ultra.LevelEditor
         public float FadeOutDuration;
         public MMTweenType FadeOutTweenType;
 
-        public TileBase CurrentTileBase;
+        [FormerlySerializedAs("CurrentTileBase")] public TileBase CurrentTile;
+        public UPrefabTile CurrentPrefabTile;
         public ULevelEditorInputManager InputManager {  get; private set; }
         public ULevelEditorGridDrawer GridDrawer { get; private set; }
 
@@ -79,7 +73,7 @@ namespace Ultra.LevelEditor
         {
             InputManager.ReadInput();
 
-            CurrentTileBase = GUIManager.CurrentSelectedTileBase();
+            CurrentTile = GUIManager.CurrentSelectedTileBase();
             CurrentTool = GUIManager.CurrentSelectedTool();
 
             GUIManager.UpdateGUIs();
@@ -149,17 +143,7 @@ namespace Ultra.LevelEditor
         }
         private void InitializeTools()
         {
-            ToolPersistence = new UToolPersistence(this);
-
-            BrushTool = new UBrushTool(this, ULevelEditorToolTypes.Brush);
-            BoxSelectTool = new UBoxSelectTool(this, ULevelEditorToolTypes.BoxSelect);
-            MoveTool = new UMoveTool(this, ULevelEditorToolTypes.Move);
-            EraserTool = new UEraserTool(this, ULevelEditorToolTypes.Eraser);
-            LineTool = new ULineTool(this, ULevelEditorToolTypes.Line);
-            CircleTool = new UCircleTool(this, ULevelEditorToolTypes.Circle);
-            CircleSelectTool = new UCircleSelectTool(this, ULevelEditorToolTypes.CircleSelect);
-            BucketTool = new UBucketTool(this, ULevelEditorToolTypes.Bucket);
-            MagicWandTool = new UMagicWandTool(this, ULevelEditorToolTypes.MagicWand);
+            _tools = GameObject.FindObjectsOfType<ULevelEditorTool>();
         }
         private void InitializeGUIs()
         {
@@ -192,43 +176,18 @@ namespace Ultra.LevelEditor
         #region Update
         private void UpdateTools()
         {
-            ToolPersistence.HandleInput();
-
-            BrushTool.HandleInput();
-            BoxSelectTool.HandleInput();
-            MoveTool.HandleInput();
-            EraserTool.HandleInput();
-            LineTool.HandleInput();
-            CircleTool.HandleInput();
-            CircleSelectTool.HandleInput();
-            BucketTool.HandleInput();
-            MagicWandTool.HandleInput();
+            ToolPersistenceEvent?.Invoke();
+            _tools.ForEach(t => t.HandleInput());
         }
         #endregion
         #region Events
         public void ToolSelected(ULevelEditorToolTypes toolType)
         {
-            BrushTool.Select(toolType);
-            BoxSelectTool.Select(toolType);
-            MoveTool.Select(toolType);
-            EraserTool.Select(toolType);
-            LineTool.Select(toolType);
-            CircleTool.Select(toolType);
-            CircleSelectTool.Select(toolType);
-            BucketTool.Select(toolType);
-            MagicWandTool.Select(toolType);
+            _tools.ForEach(t => t.Select(toolType));
         }
         public void ToolUnSelected(ULevelEditorToolTypes toolType)
         {
-            BrushTool.UnSelect(toolType);
-            BoxSelectTool.UnSelect(toolType);
-            MoveTool.UnSelect(toolType);
-            EraserTool.UnSelect(toolType);
-            LineTool.UnSelect(toolType);
-            CircleTool.UnSelect(toolType);
-            CircleSelectTool.UnSelect(toolType);
-            BucketTool.UnSelect(toolType);
-            MagicWandTool.UnSelect(toolType);
+            _tools.ForEach(t => t.UnSelect(toolType));
         }
         #endregion
     }

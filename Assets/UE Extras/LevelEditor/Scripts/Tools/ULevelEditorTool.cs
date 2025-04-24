@@ -5,10 +5,10 @@ using UnityEngine;
 
 namespace Ultra.LevelEditor
 {
-    public class ULevelEditorTool
+    public class ULevelEditorTool: MonoBehaviour
     {
-        private ULevelEditorToolTypes ToolType;
-        protected ULevelEditor LevelEditor { get; private set; }
+        [SerializeField] private ULevelEditorToolTypes ToolType;
+        protected ULevelEditor LevelEditor { get => ULevelEditor.Instance; }
         protected ULevelEditorInputManager InputManager { get => LevelEditor.InputManager; }
         protected Vector3Int CurrentMouseCellPos { get; private set; }
         protected Vector3Int LastCellPos { get; private set; }
@@ -26,11 +26,6 @@ namespace Ultra.LevelEditor
         }
         private bool ToolStarted;
         protected bool ToolSelected;
-        public ULevelEditorTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType)
-        {
-            LevelEditor = levelEditor;
-            ToolType = toolType;
-        }
         public virtual void InterruptTool()
         {
             if (ToolStarted)

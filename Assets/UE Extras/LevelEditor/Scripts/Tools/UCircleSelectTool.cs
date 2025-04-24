@@ -6,9 +6,6 @@ namespace Ultra.LevelEditor
 {
     public class UCircleSelectTool : ULevelEditorTool
     {
-        public UCircleSelectTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
-        {
-        }
         public SelectStates CircleSelectState { get; private set; }
 
         public GameObject _activeBox;

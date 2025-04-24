@@ -7,9 +7,6 @@ namespace Ultra.LevelEditor
     public class UEraserTool : ULevelEditorTool
     {
         private List<Vector3Int> _toBeErasedTiles = new List<Vector3Int>();
-        public UEraserTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
-        {
-        }
         protected override void OnMouseLeftButton()
         {
             if (MoveMoreThanOneCellAtFrame)

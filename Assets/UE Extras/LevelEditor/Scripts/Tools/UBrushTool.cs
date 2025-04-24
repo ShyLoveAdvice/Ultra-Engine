@@ -12,9 +12,6 @@ namespace Ultra.LevelEditor
         public Vector3Int[] _paintedTiles = new Vector3Int[0];
         public Vector3Int[] _drawnTiles;
         protected Vector3 _mouseWorldPos;
-        public UBrushTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType): base(levelEditor, toolType)
-        {
-        }
         protected override void PersistUpdate()
         {
 
@@ -43,7 +40,7 @@ namespace Ultra.LevelEditor
             if(_toBePaintedTiles.Count > 0)
             {
                 LevelEditor.PreviewLayer.ClearPreviewTiles();
-                LevelEditor.CurrentLayer.DrawTiles(_toBePaintedTiles.ToArray(), LevelEditor.CurrentTileBase);
+                LevelEditor.CurrentLayer.DrawTiles(_toBePaintedTiles.ToArray(), LevelEditor.CurrentTile);
                 _toBePaintedTiles.Clear();
             }
         }
@@ -54,7 +51,7 @@ namespace Ultra.LevelEditor
                 if (Selection.NothingSelected || Selection.Contains(tilePos))
                 {
                     _toBePaintedTiles.Add(tilePos);
-                    LevelEditor.PreviewLayer.DrawPreviewTile(tilePos, LevelEditor.CurrentTileBase);
+                    LevelEditor.PreviewLayer.DrawPreviewTile(tilePos, LevelEditor.CurrentTile);
                 }
             }
         }

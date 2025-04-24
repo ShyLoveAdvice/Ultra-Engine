@@ -115,10 +115,6 @@ namespace Ultra.LevelEditor
                 }
             }
         }
-        public void UpdateCurrentSelectedTileBase(TileBase tileBase)
-        {
-            _currentSelectedTileBase = tileBase;
-        }
         public void UpdateMouseOverUI(bool isMouseOverUI)
         {
             _isMouseOverUI = isMouseOverUI;

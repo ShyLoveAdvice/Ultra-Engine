@@ -13,6 +13,8 @@ namespace Ultra.LevelEditor
     }
     public class UBoxSelectTool : ULevelEditorTool
     {
+        public GameObject ActiveBox;
+        public GameObject SelectedBox;
         public SelectStates BoxSelectState { get; private set; }
 
         protected Vector3Int _startCellPos;
@@ -32,13 +34,6 @@ namespace Ultra.LevelEditor
         }
         private Vector3Int _movedDistance;
         private Vector3Int _lastMovedDistance;
-        public UBoxSelectTool(ULevelEditor levelEditor, ULevelEditorToolTypes toolType) : base(levelEditor, toolType)
-        {
-        }
-        public override void InterruptTool()
-        {
-            base.InterruptTool();
-        }
         protected override void OnSelected()
         {
             base.OnSelected();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,15 +6,20 @@ using UnityEngine.Tilemaps;
 
 namespace Ultra.LevelEditor
 {
-    public class UToolPersistence
+    public class UToolPersistence: MonoBehaviour
     {
-        protected ULevelEditor LevelEditor { get; private set; }
+        protected ULevelEditor LevelEditor { get => ULevelEditor.Instance; }
         protected ULevelEditorInputManager InputManager { get => LevelEditor.InputManager; }
         protected Vector3Int CurrentMouseCellPos { get; private set; }
         protected Vector3Int LastCellPos { get; private set; }
-        public UToolPersistence(ULevelEditor levelEditor)
+
+        private void OnEnable()
         {
-            LevelEditor = levelEditor;
+            LevelEditor.ToolPersistenceEvent += HandleInput;
+        }
+        private void OnDisable()
+        {
+            LevelEditor.ToolPersistenceEvent -= HandleInput;
         }
         public void HandleInput()
         {
